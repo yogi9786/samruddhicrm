@@ -1,3 +1,11 @@
+.env
+__pycache__
+__pycache__
+__pycache__
+venv
+
+.env
+
 # Logs
 logs
 *.log
@@ -23,11 +31,6 @@ dist-ssr
 *.sln
 *.sw?
 
-.env
-__pycache__
-__pycache__
-__pycache__
-venv
 
 .env
 venv
