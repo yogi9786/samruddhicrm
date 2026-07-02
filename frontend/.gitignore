@@ -31,3 +31,5 @@ venv
 
 .env
 venv
+firebase-key.json
+.venv 
