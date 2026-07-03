@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Plus, Search, RefreshCw, Edit, Phone, Mail, Download, Upload, MessageSquare, FileText } from 'lucide-react';
 
 interface Lead {
@@ -10,7 +11,6 @@ interface Lead {
   email?: string;
   source: string;
   status: string;
-  interestedIn?: string;
   interestedIn?: string;
   notes?: string;
   scheduledCall?: string;
@@ -360,8 +360,10 @@ export const Leads = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">
-          {error}
+        <div className="bg-red-50 border border-red-100 p-4 rounded-xl">
+          <p className="text-red-600 text-sm font-bold">⚠ API Connection Error</p>
+          <p className="text-red-500 text-xs mt-1">{error}</p>
+          <p className="text-red-400 text-xs mt-1">Make sure the backend server is running: <code className="bg-red-100 px-1 rounded">run_backend.bat</code></p>
         </div>
       )}
 

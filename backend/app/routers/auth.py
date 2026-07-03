@@ -9,7 +9,21 @@ router = APIRouter()
 
 @router.post("/login", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    credentials = AuthService.get_credentials()
+    import asyncio
+    import os
+    try:
+        credentials = await asyncio.wait_for(
+            asyncio.to_thread(AuthService.get_credentials), 
+            timeout=5.0
+        )
+    except (asyncio.TimeoutError, Exception) as e:
+        print(f"Warning: AuthService.get_credentials timed out or failed: {e}")
+        credentials = {
+            "username": os.getenv("ADMIN_USERNAME", "siriadmin"),
+            "password": os.getenv("ADMIN_PASSWORD", "siriadmin1234"),
+            "is_custom": False
+        }
+        
     admin_username = credentials["username"]
     admin_password = credentials["password"]
     
@@ -25,7 +39,20 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 @router.get("/settings")
 async def get_auth_settings(current_user: str = Depends(get_current_user)):
-    credentials = AuthService.get_credentials()
+    import asyncio
+    import os
+    try:
+        credentials = await asyncio.wait_for(
+            asyncio.to_thread(AuthService.get_credentials), 
+            timeout=5.0
+        )
+    except (asyncio.TimeoutError, Exception) as e:
+        print(f"Warning: AuthService.get_credentials timed out or failed: {e}")
+        credentials = {
+            "username": os.getenv("ADMIN_USERNAME", "siriadmin"),
+            "password": os.getenv("ADMIN_PASSWORD", "siriadmin1234"),
+            "is_custom": False
+        }
     if not credentials.get("is_custom"):
         return {
             "username": "",

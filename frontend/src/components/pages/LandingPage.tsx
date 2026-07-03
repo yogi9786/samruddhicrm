@@ -20,7 +20,7 @@ export const LandingPage = () => {
       formData.append('username', username);
       formData.append('password', password);
 
-      const response = await fetch('http://localhost:8000/api/auth/login', {
+      const response = await fetch('http://127.0.0.1:8000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -74,8 +74,13 @@ export const LandingPage = () => {
           
           <div className="p-8">
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 font-medium text-center border border-red-100">
-                {error}
+              <div className="bg-red-50 border border-red-100 p-3 rounded-lg text-sm mb-6 text-center">
+                <p className="text-red-600 font-bold">{error}</p>
+                {error.includes('connect') || error.includes('Cannot') ? (
+                  <p className="text-red-400 text-xs mt-1">
+                    Make sure the backend is running: <code className="bg-red-100 px-1 rounded">run_backend.bat</code>
+                  </p>
+                ) : null}
               </div>
             )}
             

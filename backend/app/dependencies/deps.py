@@ -23,8 +23,23 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is not None:
+            import asyncio
+            import os
             from app.services.auth import AuthService
-            active_auth = AuthService.get_credentials()
+            
+            try:
+                active_auth = await asyncio.wait_for(
+                    asyncio.to_thread(AuthService.get_credentials),
+                    timeout=5.0
+                )
+            except (asyncio.TimeoutError, Exception) as e:
+                print(f"Warning: AuthService.get_credentials timed out in deps.py: {e}")
+                active_auth = {
+                    "username": os.getenv("ADMIN_USERNAME", "siriadmin"),
+                    "password": os.getenv("ADMIN_PASSWORD", "siriadmin1234"),
+                    "is_custom": False
+                }
+                
             if username == active_auth.get("username"):
                 return username
     except JWTError:

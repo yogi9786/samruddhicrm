@@ -1,7 +1,6 @@
 from datetime import datetime
 import uuid
 from app.core.firebase import db
-from app.services.notifications import NotificationService
 
 class CRMService:
     @staticmethod
@@ -15,13 +14,6 @@ class CRMService:
         lead_data["id"] = lead_id
         lead_data["createdAt"] = datetime.utcnow().isoformat() + "Z"
         db.collection("leads").document(lead_id).set(lead_data)
-        
-        # Send push notification
-        NotificationService.send_push_notification(
-            title="New Lead Added",
-            body=f"{lead_data.get('name')} from {lead_data.get('source', 'Unknown')}",
-            url="/dashboard/leads"
-        )
         
         return lead_data
 
@@ -53,28 +45,8 @@ class CRMService:
             from fastapi import HTTPException
             raise HTTPException(status_code=404, detail="Lead not found")
         lead_data["id"] = lead_id
-        
-        # Check if scheduledCall was added or changed
-        old_data = doc_ref.get().to_dict()
-        new_scheduled = lead_data.get("scheduledCall")
-        old_scheduled = old_data.get("scheduledCall")
-        
         doc_ref.set(lead_data, merge=True)
         
-        if new_scheduled and new_scheduled != old_scheduled:
-            # Format datetime for notification
-            try:
-                dt = datetime.fromisoformat(new_scheduled.replace("Z", "+00:00"))
-                formatted_time = dt.strftime("%b %d, %Y at %I:%M %p")
-            except:
-                formatted_time = new_scheduled
-                
-            NotificationService.send_push_notification(
-                title="Call Scheduled",
-                body=f"Call with {lead_data.get('name')} scheduled for {formatted_time}",
-                url="/dashboard/leads"
-            )
-            
         return lead_data
 
     @staticmethod

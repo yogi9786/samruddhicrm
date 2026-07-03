@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../utils/api';
+import { CardSkeleton } from '../components/ui/LoadingSpinner';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -12,19 +13,15 @@ import {
   Pie, 
   Cell, 
   BarChart, 
-  Bar 
+  Bar,
+  Legend
 } from 'recharts';
-import { RefreshCw, TrendingUp, Compass, Gem } from 'lucide-react';
+import { RefreshCw, TrendingUp, Compass, Gem, Facebook, Instagram } from 'lucide-react';
 
-interface ChartItem {
-  name: string;
-  value: number;
-}
+interface ChartItem { name: string; value: number; }
+interface TrendItem { date: string; leads: number; }
 
-interface TrendItem {
-  date: string;
-  leads: number;
-}
+const PALETTE = ['#800000', '#F59E0B', '#1877F2', '#E1306C', '#F97316', '#8b5cf6', '#16a34a'];
 
 export const Analytics = () => {
   const [trends, setTrends] = useState<TrendItem[]>([]);
@@ -33,11 +30,8 @@ export const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const COLORS = ['#800000', '#F59E0B', '#F97316', '#FBBF24', '#B45309', '#6B21A8'];
-
   const loadData = async () => {
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
       const data = await apiFetch('/analytics/summary');
       setTrends(data.trends);
@@ -50,163 +44,197 @@ export const Analytics = () => {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
+
+  // Derived: Meta vs non-Meta
+  const metaTotal = sources.filter(s => s.name === 'Facebook Ads' || s.name === 'Instagram Ads').reduce((sum, s) => sum + s.value, 0);
+  const manualTotal = sources.filter(s => s.name !== 'Facebook Ads' && s.name !== 'Instagram Ads').reduce((sum, s) => sum + s.value, 0);
+  const metaSplit = [
+    { name: 'Facebook Ads', value: sources.find(s => s.name === 'Facebook Ads')?.value || 0 },
+    { name: 'Instagram Ads', value: sources.find(s => s.name === 'Instagram Ads')?.value || 0 },
+    { name: 'Manual / Other', value: manualTotal },
+  ];
+  const metaColors = ['#1877F2', '#E1306C', '#800000'];
+
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-fadeIn">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="h-7 w-48 bg-gray-100 rounded-xl animate-pulse" />
+          <div className="h-4 w-64 bg-gray-100 rounded-xl animate-pulse mt-2" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[0,1,2].map(i => (
+            <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="h-8 w-16 bg-gray-100 rounded-xl animate-pulse" />
+              <div className="h-3 w-28 bg-gray-100 rounded-xl animate-pulse mt-2" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <CardSkeleton lines={6} />
+          <CardSkeleton lines={6} />
+          <CardSkeleton lines={6} />
+          <CardSkeleton lines={6} />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn">
       {/* Header */}
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-brand-maroon">Business Analytics</h1>
-          <p className="text-gray-500 text-sm mt-1">Deep insights into lead generation channels and product interests</p>
+          <h1 className="text-2xl font-serif font-bold" style={{ color: '#800000' }}>Business Analytics</h1>
+          <p className="text-gray-400 text-sm mt-0.5">Deep insights into lead channels, product interests & Meta ad performance</p>
         </div>
-        <button 
-          onClick={loadData}
-          disabled={loading}
-          className="flex items-center space-x-2 bg-brand-cream border border-brand-gold border-opacity-30 text-brand-maroon hover:bg-brand-maroon hover:text-white font-medium px-4 py-2.5 rounded-xl transition"
-        >
-          <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+        <button onClick={loadData} disabled={loading}
+          className="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium transition border"
+          style={{ borderColor: 'rgba(245,158,11,0.4)', color: '#800000', backgroundColor: 'rgba(245,158,11,0.05)' }}>
+          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           <span>{loading ? 'Refreshing...' : 'Refresh Data'}</span>
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100 font-medium">
-          {error}
+        <div className="bg-red-50 border border-red-100 p-4 rounded-xl">
+          <p className="text-red-600 text-sm font-bold">⚠ API Connection Error</p>
+          <p className="text-red-500 text-xs mt-1">{error}</p>
+          <p className="text-red-400 text-xs mt-1">Make sure the backend server is running: <code className="bg-red-100 px-1 rounded">run_backend.bat</code></p>
         </div>
       )}
 
-      {/* Main Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Lead Trends Chart */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-rose-50 text-brand-maroon rounded-lg">
-              <TrendingUp size={20} />
-            </div>
-            <div>
-              <h3 className="font-serif font-bold text-gray-800 text-lg">Lead Growth Trend</h3>
-              <p className="text-xs text-gray-400">Monthly breakdown of acquired leads</p>
-            </div>
-          </div>
-          <div className="h-80 w-full pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trends} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #f1f5f9' }} 
-                  labelStyle={{ fontWeight: 'bold', color: '#1e293b' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="leads" 
-                  stroke="#800000" 
-                  strokeWidth={3} 
-                  activeDot={{ r: 8 }} 
-                  name="Leads"
-                />
-              </LineChart>
+      {/* Meta Lead Source KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <MetaKPI icon={<Facebook size={18} />} label="Facebook Ad Leads" value={sources.find(s => s.name === 'Facebook Ads')?.value || 0} color="#1877F2" />
+        <MetaKPI icon={<Instagram size={18} />} label="Instagram Ad Leads" value={sources.find(s => s.name === 'Instagram Ads')?.value || 0} color="#E1306C" />
+        <MetaKPI icon={<TrendingUp size={18} />} label="Total Meta Leads" value={metaTotal} color="#800000" />
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Lead Growth Trend */}
+        <ChartCard icon={<TrendingUp size={18} />} iconBg="#fff1f2" iconColor="#800000" title="Lead Growth Trend" subtitle="Monthly breakdown of acquired leads">
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={trends} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} tickLine={false} />
+              <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
+              <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f1f5f9', fontSize: '12px' }} />
+              <Line type="monotone" dataKey="leads" stroke="#800000" strokeWidth={3} dot={{ fill: '#800000', r: 4 }} activeDot={{ r: 7 }} name="Leads" />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {/* Product / Scheme Interest */}
+        <ChartCard icon={<Gem size={18} />} iconBg="#fffbeb" iconColor="#F59E0B" title="Product / Scheme Interest" subtitle="Leads grouped by jewelry or savings program interest">
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={services} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
+              <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
+              <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f1f5f9', fontSize: '12px' }} />
+              <Bar dataKey="value" name="Leads" radius={[6, 6, 0, 0]}>
+                {services.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={PALETTE[index % PALETTE.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {/* Acquisition Channel Breakdown (Pie) */}
+        <ChartCard icon={<Compass size={18} />} iconBg="#fff7ed" iconColor="#F97316" title="Acquisition Channel Breakdown" subtitle="Lead share by source: Walk-in, WhatsApp, Meta, Referral">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={sources} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value">
+                  {sources.map((_, index) => <Cell key={`cell-${index}`} fill={PALETTE[index % PALETTE.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ fontSize: '12px', borderRadius: '10px' }} />
+              </PieChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Interested Services/Jewelry Categories */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-amber-50 text-brand-gold rounded-lg">
-              <Gem size={20} />
-            </div>
-            <div>
-              <h3 className="font-serif font-bold text-gray-800 text-lg">Product / Scheme Interest</h3>
-              <p className="text-xs text-gray-400">Leads by category of jewelry or savings program</p>
-            </div>
-          </div>
-          <div className="h-80 w-full pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={services} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #f1f5f9' }}
-                />
-                <Bar dataKey="value" fill="#F59E0B" name="Leads Count" radius={[6, 6, 0, 0]}>
-                  {services.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Acquisition Sources (Pie Chart) */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4 lg:col-span-2">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-orange-50 text-brand-orange rounded-lg">
-              <Compass size={20} />
-            </div>
-            <div>
-              <h3 className="font-serif font-bold text-gray-800 text-lg">Acquisition Channel Breakdown</h3>
-              <p className="text-xs text-gray-400">Comparing lead volume across different communication sources</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center pt-4">
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={sources}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {sources.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Source Details Legend */}
-            <div className="space-y-4 max-w-sm">
-              <h4 className="font-semibold text-gray-700 text-sm">Lead Share percentages:</h4>
-              <div className="grid grid-cols-1 gap-3">
-                {sources.map((source, index) => {
-                  const total = sources.reduce((sum, item) => sum + item.value, 0);
-                  const percentage = total > 0 ? ((source.value / total) * 100).toFixed(1) : 0;
-                  return (
-                    <div key={source.name} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
-                      <div className="flex items-center space-x-3">
-                        <div 
-                          className="w-3.5 h-3.5 rounded-full" 
-                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                        />
-                        <span className="font-medium text-gray-700 text-sm">{source.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-bold text-gray-800 text-sm">{source.value} leads</span>
-                        <span className="text-xs text-gray-400 ml-2">({percentage}%)</span>
-                      </div>
+            <div className="space-y-2">
+              {sources.map((source, index) => {
+                const total = sources.reduce((s, i) => s + i.value, 0);
+                const pct = total > 0 ? ((source.value / total) * 100).toFixed(1) : '0';
+                return (
+                  <div key={source.name} className="flex items-center justify-between p-2.5 rounded-xl border border-gray-100 bg-gray-50">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PALETTE[index % PALETTE.length] }} />
+                      <span className="text-xs font-medium text-gray-700">{source.name}</span>
                     </div>
-                  );
-                })}
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-gray-800">{source.value}</span>
+                      <span className="text-xs text-gray-400 ml-1">({pct}%)</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </ChartCard>
+
+        {/* Meta vs Manual (NEW chart) */}
+        <ChartCard icon={<Facebook size={18} />} iconBg="#eff6ff" iconColor="#1877F2" title="Meta vs Manual Leads" subtitle="Facebook Ads vs Instagram Ads vs Walk-in/Other">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={metaSplit} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value">
+                  {metaSplit.map((_, index) => <Cell key={`mc-${index}`} fill={metaColors[index]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ fontSize: '12px', borderRadius: '10px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="space-y-3">
+              {metaSplit.map((item, index) => (
+                <div key={item.name} className="flex items-center justify-between p-3 rounded-xl border" style={{ borderColor: `${metaColors[index]}30`, backgroundColor: `${metaColors[index]}08` }}>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: metaColors[index] }} />
+                    <span className="text-xs font-semibold" style={{ color: metaColors[index] }}>{item.name}</span>
+                  </div>
+                  <span className="text-sm font-bold" style={{ color: metaColors[index] }}>{item.value}</span>
+                </div>
+              ))}
+              <div className="text-center mt-2">
+                <p className="text-xs text-gray-400">Meta captures <strong className="text-gray-600">{metaTotal}</strong> of total {metaTotal + manualTotal} leads</p>
               </div>
             </div>
           </div>
-        </div>
+        </ChartCard>
 
       </div>
     </div>
   );
 };
+
+// ─── Helper components ─────────────────────────────────────────────────────
+
+const MetaKPI = ({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) => (
+  <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
+    <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{ backgroundColor: color }}>
+      {icon}
+    </div>
+    <div>
+      <p className="text-2xl font-bold" style={{ color }}>{value}</p>
+      <p className="text-xs text-gray-500 font-medium">{label}</p>
+    </div>
+  </div>
+);
+
+const ChartCard = ({ icon, iconBg, iconColor, title, subtitle, children }: {
+  icon: React.ReactNode; iconBg: string; iconColor: string; title: string; subtitle: string; children: React.ReactNode;
+}) => (
+  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+    <div className="flex items-center space-x-3">
+      <div className="p-2.5 rounded-xl" style={{ backgroundColor: iconBg, color: iconColor }}>{icon}</div>
+      <div>
+        <h3 className="font-bold text-gray-800">{title}</h3>
+        <p className="text-xs text-gray-400">{subtitle}</p>
+      </div>
+    </div>
+    {children}
+  </div>
+);
