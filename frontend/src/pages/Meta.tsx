@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../utils/api';
 import { 
-  Facebook, 
-  Instagram,
+  Share2, 
+  Camera,
   Settings, 
   RefreshCw, 
   CheckCircle, 
@@ -123,8 +123,8 @@ export const Meta = () => {
         <div className="flex items-center space-x-4">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1877F2 0%, #E1306C 100%)' }}>
             <div className="flex items-center">
-              <Facebook size={14} className="text-white" />
-              <Instagram size={14} className="text-white ml-0.5" />
+              <Share2 size={14} className="text-white" />
+              <Camera size={14} className="text-white ml-0.5" />
             </div>
           </div>
           <div>
@@ -181,8 +181,8 @@ export const Meta = () => {
           <div className="p-6">
             {/* Stats Row */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-              <StatBadge color="#1877F2" icon={<Facebook size={16} />} label="Facebook Leads" value={fbLeads.length} />
-              <StatBadge color="#E1306C" icon={<Instagram size={16} />} label="Instagram Leads" value={igLeads.length} />
+              <StatBadge color="#1877F2" icon={<Share2 size={16} />} label="Facebook Leads" value={fbLeads.length} />
+              <StatBadge color="#E1306C" icon={<Camera size={16} />} label="Instagram Leads" value={igLeads.length} />
               <StatBadge color="#800000" icon={<Zap size={16} />} label="Total Captured" value={leads.length} className="col-span-2 sm:col-span-1" />
             </div>
 
@@ -235,7 +235,7 @@ export const Meta = () => {
               <div>
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1877F2' }}>
-                    <Facebook size={16} className="text-white" />
+                    <Share2 size={16} className="text-white" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-800 text-sm">Facebook Messages</h4>
@@ -244,7 +244,7 @@ export const Meta = () => {
                 </div>
                 <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
                   {fbDms.length === 0 ? (
-                    <EmptyState icon={<Facebook size={24} />} title="No Facebook Messages" description="Incoming Messenger DMs will appear here in real time." small />
+                    <EmptyState icon={<Share2 size={24} />} title="No Facebook Messages" description="Incoming Messenger DMs will appear here in real time." small />
                   ) : (
                     fbDms.map(dm => <MessageBubble key={dm.id} dm={dm} />)
                   )}
@@ -255,7 +255,7 @@ export const Meta = () => {
               <div>
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}>
-                    <Instagram size={16} className="text-white" />
+                    <Camera size={16} className="text-white" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-800 text-sm">Instagram Messages</h4>
@@ -264,7 +264,7 @@ export const Meta = () => {
                 </div>
                 <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
                   {igDms.length === 0 ? (
-                    <EmptyState icon={<Instagram size={24} />} title="No Instagram Messages" description="Incoming Instagram DMs will appear here once your webhook is connected." small />
+                    <EmptyState icon={<Camera size={24} />} title="No Instagram Messages" description="Incoming Instagram DMs will appear here once your webhook is connected." small />
                   ) : (
                     igDms.map(dm => <MessageBubble key={dm.id} dm={dm} />)
                   )}
@@ -381,7 +381,7 @@ const SourceBadge = ({ source }: { source: string }) => {
   return (
     <span className="flex items-center space-x-1 px-2 py-0.5 rounded text-xs font-bold text-white"
       style={{ backgroundColor: isFb ? '#1877F2' : '#E1306C' }}>
-      {isFb ? <Facebook size={10} /> : <Instagram size={10} />}
+      {isFb ? <Share2 size={10} /> : <Camera size={10} />}
       <span>{source}</span>
     </span>
   );

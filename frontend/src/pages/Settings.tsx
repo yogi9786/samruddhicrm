@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../utils/api';
 import { 
   Sliders, Key, Save, Trash2, CheckCircle, XCircle,
-  Facebook, Instagram, Smartphone, Mail, Zap, Copy, Check, Eye, EyeOff, ExternalLink
+  Share2, Camera, Smartphone, Mail, Zap, Copy, Check, Eye, EyeOff, ExternalLink
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -232,7 +232,7 @@ export const Settings = () => {
       </SectionCard>
 
       {/* ── 2. Meta Integration ── */}
-      <SectionCard icon={<Facebook size={18} />} title="Meta Integration" subtitle="Facebook Page & Instagram connected via Webhook">
+      <SectionCard icon={<Share2 size={18} />} title="Meta Integration" subtitle="Facebook Page & Instagram connected via Webhook">
         {metaMsg.msg && <Alert type="success" text={metaMsg.msg} />}
         {metaMsg.err && <Alert type="error" text={metaMsg.err} />}
         <form onSubmit={handleSaveMeta} className="space-y-4">

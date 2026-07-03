@@ -11,10 +11,10 @@ import {
   LineChart,
   Smartphone,
   Mail,
-  Facebook,
+  Share2,
   Menu,
   X,
-  Instagram,
+  Camera,
   Gem
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -105,8 +105,8 @@ export const MainLayout = () => {
         {/* Logo Area */}
         <div className="p-5 flex justify-between items-center" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }}>
-              <Gem size={20} style={{ color: '#F59E0B' }} />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white overflow-hidden" style={{ border: '1px solid rgba(245,158,11,0.3)' }}>
+              <img src={logo} alt="Sirisamruddhi Logo" className="w-full h-full object-contain p-1" />
             </div>
             <div>
               <p className="font-bold text-white text-sm leading-tight">Sirisamruddhi</p>
@@ -147,8 +147,8 @@ export const MainLayout = () => {
             to="/dashboard/meta" 
             icon={
               <div className="flex items-center">
-                <Facebook size={14} />
-                <Instagram size={14} className="-ml-0.5" />
+                <Share2 size={14} />
+                <Camera size={14} className="-ml-0.5" />
               </div>
             } 
             label="Meta (FB & IG)" 

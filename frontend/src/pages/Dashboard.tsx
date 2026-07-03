@@ -12,8 +12,8 @@ import {
   MessageSquare,
   Mail,
   Sliders,
-  Facebook,
-  Instagram,
+  Share2,
+  Camera,
   Clock,
   Zap
 } from 'lucide-react';
@@ -41,8 +41,8 @@ interface Lead {
 }
 
 const SOURCE_ICON: Record<string, React.ReactNode> = {
-  'Facebook Ads': <Facebook size={12} className="text-white" />,
-  'Instagram Ads': <Instagram size={12} className="text-white" />,
+  'Facebook Ads': <Share2 size={12} className="text-white" />,
+  'Instagram Ads': <Camera size={12} className="text-white" />,
   'WhatsApp': <MessageSquare size={12} className="text-white" />,
 };
 const SOURCE_COLOR: Record<string, string> = {

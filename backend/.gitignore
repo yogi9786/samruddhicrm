@@ -36,3 +36,4 @@ dist-ssr
 venv
 firebase-key.json
 .venv
+firebase-key.json

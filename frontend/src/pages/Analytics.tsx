@@ -16,7 +16,7 @@ import {
   Bar,
   Legend
 } from 'recharts';
-import { RefreshCw, TrendingUp, Compass, Gem, Facebook, Instagram } from 'lucide-react';
+import { RefreshCw, TrendingUp, Compass, Gem, Share2, Camera } from 'lucide-react';
 
 interface ChartItem { name: string; value: number; }
 interface TrendItem { date: string; leads: number; }
@@ -107,8 +107,8 @@ export const Analytics = () => {
 
       {/* Meta Lead Source KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <MetaKPI icon={<Facebook size={18} />} label="Facebook Ad Leads" value={sources.find(s => s.name === 'Facebook Ads')?.value || 0} color="#1877F2" />
-        <MetaKPI icon={<Instagram size={18} />} label="Instagram Ad Leads" value={sources.find(s => s.name === 'Instagram Ads')?.value || 0} color="#E1306C" />
+        <MetaKPI icon={<Share2 size={18} />} label="Facebook Ad Leads" value={sources.find(s => s.name === 'Facebook Ads')?.value || 0} color="#1877F2" />
+        <MetaKPI icon={<Camera size={18} />} label="Instagram Ad Leads" value={sources.find(s => s.name === 'Instagram Ads')?.value || 0} color="#E1306C" />
         <MetaKPI icon={<TrendingUp size={18} />} label="Total Meta Leads" value={metaTotal} color="#800000" />
       </div>
 
@@ -178,7 +178,7 @@ export const Analytics = () => {
         </ChartCard>
 
         {/* Meta vs Manual (NEW chart) */}
-        <ChartCard icon={<Facebook size={18} />} iconBg="#eff6ff" iconColor="#1877F2" title="Meta vs Manual Leads" subtitle="Facebook Ads vs Instagram Ads vs Walk-in/Other">
+        <ChartCard icon={<Share2 size={18} />} iconBg="#eff6ff" iconColor="#1877F2" title="Meta vs Manual Leads" subtitle="Facebook Ads vs Instagram Ads vs Walk-in/Other">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>

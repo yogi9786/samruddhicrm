@@ -9,8 +9,8 @@ import {
   Tag, 
   FileText,
   Search,
-  Instagram,
-  Facebook,
+  Camera,
+  Share2,
   Smartphone
 } from 'lucide-react';
 
@@ -57,7 +57,7 @@ const CHANNEL_CONFIG: Record<ChannelTab, { label: string; color: string; bg: str
     color: '#1877F2',
     bg: '#eff6ff',
     borderColor: '#bfdbfe',
-    icon: <Facebook size={14} />,
+    icon: <Share2 size={14} />,
     msgChannel: 'Facebook DM',
   },
   Instagram: {
@@ -65,7 +65,7 @@ const CHANNEL_CONFIG: Record<ChannelTab, { label: string; color: string; bg: str
     color: '#E1306C',
     bg: '#fdf2f8',
     borderColor: '#fbcfe8',
-    icon: <Instagram size={14} />,
+    icon: <Camera size={14} />,
     msgChannel: 'Instagram DM',
   },
 };
