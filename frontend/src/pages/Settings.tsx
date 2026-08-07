@@ -133,11 +133,15 @@ export const Settings = () => {
   const brevoMsg = useMsg();
   const [savingBrevo, setSavingBrevo] = useState(false);
 
-  const backendBase = `${window.location.protocol}//${window.location.hostname}:8000`;
+
+  // Webhook URLs are always relative to the current origin (e.g. https://ssgpcrm.cloud).
+  // Nginx proxies /api/ → http://127.0.0.1:8000, so the browser never needs to know about port 8000.
+  const backendBase = `${window.location.origin}/api`;
   const webhookUrls = [
-    { label: 'Meta Webhook (FB Leads, FB Messages, IG Messages)', value: `${backendBase}/api/webhooks/meta/` },
-    { label: 'WhatsApp Webhook (Twilio)', value: `${backendBase}/api/webhooks/whatsapp/` },
+    { label: 'Meta Webhook (FB Leads, FB Messages, IG Messages)', value: `${backendBase}/webhooks/meta/` },
+    { label: 'WhatsApp Webhook (Twilio)', value: `${backendBase}/webhooks/whatsapp/` },
   ];
+
 
   // Load all settings on mount
   useEffect(() => {

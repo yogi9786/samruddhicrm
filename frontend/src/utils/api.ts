@@ -1,4 +1,7 @@
-const BASE_URL = "http://127.0.0.1:8000/api";
+// VITE_API_URL is set via .env (local dev) or .env.production (production build).
+// Local dev:  VITE_API_URL=http://127.0.0.1:8000/api  (direct connection)
+// Production: VITE_API_URL=/api                        (Nginx proxies /api → 127.0.0.1:8000)
+const BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
 const REQUEST_TIMEOUT_MS = 10000; // 10 seconds
 
 export const getHeaders = () => {
@@ -47,7 +50,7 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
       throw new Error("Request timed out. Please check if the backend server is running.");
     }
     if (err instanceof TypeError && err.message.includes("fetch")) {
-      throw new Error("Cannot connect to the backend server. Please ensure it is running on http://localhost:8000.");
+      throw new Error("Cannot connect to the backend server. Please ensure it is running.");
     }
     throw err;
   }
