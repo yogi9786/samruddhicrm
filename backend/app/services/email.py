@@ -3,29 +3,35 @@ import uuid
 import httpx
 from datetime import datetime
 from fastapi import HTTPException
-from app.core.firebase import db
+from app.core.database import get_db_connection, get_setting, set_setting
 
 class EmailService:
     @staticmethod
     async def get_settings() -> dict:
-        settings_doc = db.collection("settings").document("email").get()
-        if settings_doc.exists:
-            return settings_doc.to_dict()
-        return {
+        default_settings = {
             "api_key": os.getenv("BREVO_API_KEY", ""),
             "sender_email": os.getenv("SENDER_EMAIL", "info@sirisamruddhi.com"),
             "sender_name": "Sirisamruddhi Gold Palace",
             "is_active": bool(os.getenv("BREVO_API_KEY"))
         }
+        return get_setting("email", default_settings)
 
     @staticmethod
     async def update_settings(settings_data: dict) -> None:
-        db.collection("settings").document("email").set(settings_data)
+        set_setting("email", settings_data)
 
     @staticmethod
     async def get_logs() -> list:
-        logs_ref = db.collection("email_logs").stream()
-        return [doc.to_dict() for doc in logs_ref]
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM email_logs ORDER BY timestamp DESC")
+            rows = cursor.fetchall()
+            conn.close()
+            return [dict(r) for r in rows]
+        except Exception as e:
+            print(f"Error fetching email logs: {e}")
+            return []
 
     @staticmethod
     async def send_email(
@@ -67,7 +73,6 @@ class EmailService:
         }
         
         if attachment_name and attachment_content:
-            # Brevo API expects: [{"name": "file.txt", "content": "base64String"}]
             payload["attachment"] = [{
                 "name": attachment_name,
                 "content": attachment_content
@@ -93,12 +98,19 @@ class EmailService:
             "subject": subject,
             "timestamp": timestamp,
             "status": "Delivered" if sent_successfully else "Failed",
-            "opens": 0,
-            "clicks": 0,
+            "messageId": email_id,
             "error": error_message,
-            "is_mocked": not sent_successfully
+            "body": body
         }
-        db.collection("email_logs").document(email_id).set(email_log)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        INSERT INTO email_logs (id, to_email, subject, timestamp, status, messageId, error, body)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (email_log["id"], email_log["to_email"], email_log["subject"], email_log["timestamp"], email_log["status"], email_log["messageId"], email_log["error"], email_log["body"]))
+        conn.commit()
+        conn.close()
         
         if not sent_successfully:
             raise HTTPException(status_code=500, detail=error_message or "Brevo Email dispatch failed.")
@@ -125,7 +137,6 @@ class EmailService:
                 )
                 results.append({"email": email, "status": "success", "log_id": log.get("id")})
             except Exception as e:
-                # Catch HTTPException or others to report exact status in bulk logs
                 error_detail = str(e)
                 if hasattr(e, "detail"):
                     error_detail = getattr(e, "detail")

@@ -1,35 +1,37 @@
 import os
 import uuid
+import json
 from datetime import datetime
 from fastapi import HTTPException
-from app.core.firebase import db
+from app.core.database import get_db_connection, get_setting, set_setting
 
 class WhatsAppService:
     @staticmethod
     async def get_settings() -> dict:
-        settings_doc = db.collection("settings").document("whatsapp").get()
-        if settings_doc.exists:
-            return settings_doc.to_dict()
-        return {
+        default_settings = {
             "account_sid": os.getenv("TWILIO_ACCOUNT_SID", ""),
             "auth_token": os.getenv("TWILIO_AUTH_TOKEN", ""),
             "phone_number": os.getenv("TWILIO_PHONE_NUMBER", ""),
             "is_active": bool(os.getenv("TWILIO_ACCOUNT_SID"))
         }
+        return get_setting("whatsapp", default_settings)
 
     @staticmethod
     async def update_settings(settings_data: dict) -> None:
-        db.collection("settings").document("whatsapp").set(settings_data)
+        set_setting("whatsapp", settings_data)
 
     @staticmethod
     async def get_messages() -> list:
-        messages_ref = db.collection("messages").stream()
-        wa_messages = []
-        for doc in messages_ref:
-            msg = doc.to_dict()
-            if msg.get("channel") == "WhatsApp":
-                wa_messages.append(msg)
-        return sorted(wa_messages, key=lambda x: x.get("timestamp", ""))
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM messages WHERE channel = 'WhatsApp' ORDER BY timestamp ASC")
+            rows = cursor.fetchall()
+            conn.close()
+            return [dict(r) for r in rows]
+        except Exception as e:
+            print(f"Error fetching whatsapp messages: {e}")
+            return []
 
     @staticmethod
     async def send_message(to_number: str, body: str) -> dict:
@@ -68,16 +70,23 @@ class WhatsAppService:
         
         new_msg = {
             "id": msg_id,
-            "from": "Sirisamruddhi CRM",
-            "to": to_number,
+            "sender": "Sirisamruddhi CRM",
+            "recipient": to_number,
             "body": body,
             "timestamp": timestamp,
             "channel": "WhatsApp",
-            "status": "Sent" if sent_successfully else "Failed",
-            "error": twilio_error,
-            "is_mocked": not sent_successfully
+            "platform_id": to_number,
+            "status": "Sent" if sent_successfully else "Failed"
         }
-        db.collection("messages").document(msg_id).set(new_msg)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        INSERT INTO messages (id, sender, recipient, body, timestamp, channel, platform_id, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (new_msg["id"], new_msg["sender"], new_msg["recipient"], new_msg["body"], new_msg["timestamp"], new_msg["channel"], new_msg["platform_id"], new_msg["status"]))
+        conn.commit()
+        conn.close()
         
         if not sent_successfully:
             raise HTTPException(status_code=500, detail=twilio_error or "Twilio WhatsApp sending failed.")
@@ -97,8 +106,16 @@ class WhatsAppService:
 
     @staticmethod
     async def get_templates() -> list:
-        templates_ref = db.collection("whatsapp_templates").stream()
-        return [doc.to_dict() for doc in templates_ref]
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM whatsapp_templates ORDER BY rowid DESC")
+            rows = cursor.fetchall()
+            conn.close()
+            return [dict(r) for r in rows]
+        except Exception as e:
+            print(f"Error fetching whatsapp templates: {e}")
+            return []
 
     @staticmethod
     async def save_template(name: str, body: str, category: str) -> dict:
@@ -107,7 +124,17 @@ class WhatsAppService:
             "id": tpl_id,
             "name": name,
             "body": body,
-            "category": category
+            "category": category,
+            "language": "en",
+            "status": "APPROVED",
+            "variables": "[]"
         }
-        db.collection("whatsapp_templates").document(tpl_id).set(data)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        INSERT INTO whatsapp_templates (id, name, category, language, body, status, variables)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (data["id"], data["name"], data["category"], data["language"], data["body"], data["status"], data["variables"]))
+        conn.commit()
+        conn.close()
         return data

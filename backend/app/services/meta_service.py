@@ -1,6 +1,6 @@
 """
 Meta Integration Service
-Handles: Graph API lead fetch, FB/IG message save to Firestore
+Handles: Graph API lead fetch, FB/IG message save to SQLite database
 """
 import os
 import logging
@@ -8,7 +8,8 @@ import uuid
 from datetime import datetime
 
 import httpx
-from app.core.firebase import db
+from app.core.database import get_db_connection
+from app.services.crm import CRMService
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -21,14 +22,14 @@ GRAPH_API_BASE = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
 class MetaService:
 
     # -------------------------------------------------------------------------
-    # LEAD CAPTURE — Graph API fetch + Firestore save
+    # LEAD CAPTURE — Graph API fetch + SQLite save
     # -------------------------------------------------------------------------
 
     @staticmethod
     async def fetch_and_save_lead(lead_id: str, form_id: str = "") -> dict | None:
         """
         Fetches full lead data from Meta Graph API using lead_id,
-        then saves it to Firestore as a CRM lead.
+        then saves it to SQLite as a CRM lead.
         Returns the saved lead dict or None on failure.
         """
         if not META_ACCESS_TOKEN or META_ACCESS_TOKEN == "your_page_or_system_user_access_token":
@@ -76,68 +77,81 @@ class MetaService:
             "interestedIn": "Gold Jewelry",
             "notes": f"Auto-captured from Meta Ads. Form ID: {form_id or data.get('form_id', '')} | Lead ID: {lead_id}",
             "createdAt": datetime.utcnow().isoformat() + "Z",
-            "meta_lead_id": lead_id,
-            "meta_form_id": form_id or data.get("form_id", ""),
         }
 
-        # Save to Firestore
+        # Save to SQLite CRM
         try:
-            db.collection("leads").document(lead_doc["id"]).set(lead_doc)
-            logger.info(f"Meta lead saved to Firestore: {lead_doc['id']} — {name}")
+            saved_lead = await CRMService.create_lead(lead_doc)
+            logger.info(f"Meta lead saved to SQLite: {lead_doc['id']} — {name}")
+            return saved_lead
         except Exception as e:
-            logger.error(f"Failed to save Meta lead to Firestore: {str(e)}")
+            logger.error(f"Failed to save Meta lead to SQLite: {str(e)}")
             return None
 
-        return lead_doc
-
     # -------------------------------------------------------------------------
-    # FACEBOOK MESSENGER — Save incoming message to Firestore
+    # FACEBOOK MESSENGER — Save incoming message to SQLite
     # -------------------------------------------------------------------------
 
     @staticmethod
     def save_facebook_message(sender_id: str, message_text: str) -> dict:
         """
-        Saves an incoming Facebook Messenger message to the messages collection.
+        Saves an incoming Facebook Messenger message to the messages table.
         """
         msg_id = f"dm_{uuid.uuid4().hex[:8]}"
         message_doc = {
             "id": msg_id,
-            "from": sender_id,
-            "to": "page",
+            "sender": sender_id,
+            "recipient": "page",
             "body": message_text,
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "channel": "Facebook DM",
             "platform_id": sender_id,
+            "status": "received"
         }
         try:
-            db.collection("messages").document(msg_id).set(message_doc)
-            logger.info(f"Saved FB message from {sender_id} to Firestore")
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+            INSERT INTO messages (id, sender, recipient, body, timestamp, channel, platform_id, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (message_doc["id"], message_doc["sender"], message_doc["recipient"], message_doc["body"], message_doc["timestamp"], message_doc["channel"], message_doc["platform_id"], message_doc["status"]))
+            conn.commit()
+            conn.close()
+            logger.info(f"Saved FB message from {sender_id} to SQLite")
         except Exception as e:
             logger.error(f"Failed to save FB message: {str(e)}")
         return message_doc
 
     # -------------------------------------------------------------------------
-    # INSTAGRAM — Save incoming message to Firestore
+    # INSTAGRAM — Save incoming message to SQLite
     # -------------------------------------------------------------------------
 
     @staticmethod
     def save_instagram_message(sender_id: str, message_text: str) -> dict:
         """
-        Saves an incoming Instagram DM to the messages collection.
+        Saves an incoming Instagram DM to the messages table.
         """
         msg_id = f"dm_{uuid.uuid4().hex[:8]}"
         message_doc = {
             "id": msg_id,
-            "from": sender_id,
-            "to": "instagram_business",
+            "sender": sender_id,
+            "recipient": "instagram_business",
             "body": message_text,
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "channel": "Instagram DM",
             "platform_id": sender_id,
+            "status": "received"
         }
         try:
-            db.collection("messages").document(msg_id).set(message_doc)
-            logger.info(f"Saved IG message from {sender_id} to Firestore")
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+            INSERT INTO messages (id, sender, recipient, body, timestamp, channel, platform_id, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (message_doc["id"], message_doc["sender"], message_doc["recipient"], message_doc["body"], message_doc["timestamp"], message_doc["channel"], message_doc["platform_id"], message_doc["status"]))
+            conn.commit()
+            conn.close()
+            logger.info(f"Saved IG message from {sender_id} to SQLite")
         except Exception as e:
             logger.error(f"Failed to save IG message: {str(e)}")
         return message_doc

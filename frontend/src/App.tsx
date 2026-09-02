@@ -2,9 +2,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { LandingPage } from './components/pages/LandingPage';
+import { CrmLogin } from './pages/CrmLogin';
+import { GmbRegistrationPage } from './pages/gmb/GmbRegistrationPage';
+import { GmbPassPage } from './pages/gmb/GmbPassPage';
+import { GmbAdminLayout } from './pages/admin/gmb/GmbAdminLayout';
 
-// Real CRM Pages
+// CRM Pages
 import { Dashboard } from './pages/Dashboard';
 import { Leads } from './pages/Leads';
 import { Clients } from './pages/Clients';
@@ -21,9 +24,31 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Navigate to="/" replace />} />
+          {/* Main Home Page directly renders GBM Registration Form */}
+          <Route path="/" element={<GmbRegistrationPage />} />
           
+          {/* Public GBM Event Registration & Pass Routes */}
+          <Route path="/gbm/registrationform" element={<GmbRegistrationPage />} />
+          <Route path="/gbm/registrationform/" element={<GmbRegistrationPage />} />
+          <Route path="/gbm/events" element={<GmbRegistrationPage />} />
+          <Route path="/gbm" element={<GmbRegistrationPage />} />
+          <Route path="/GBM Event" element={<GmbRegistrationPage />} />
+          <Route path="/gbm/pass/:token" element={<GmbPassPage />} />
+
+          {/* Legacy GMB Aliases */}
+          <Route path="/gmb/registrationform" element={<GmbRegistrationPage />} />
+          <Route path="/gmb/registrationform/" element={<GmbRegistrationPage />} />
+          <Route path="/gmb/pass/:token" element={<GmbPassPage />} />
+
+          {/* Dedicated Secret CRM Login Route */}
+          <Route path="/sirisamruddhicrmlogin" element={<CrmLogin />} />
+          <Route path="/login" element={<Navigate to="/sirisamruddhicrmlogin" replace />} />
+
+          {/* GBM Admin & Staff Portal */}
+          <Route path="/admin" element={<GmbAdminLayout />} />
+          <Route path="/admin/*" element={<GmbAdminLayout />} />
+
+          {/* Protected Full-Featured CRM Dashboard */}
           <Route path="/dashboard" element={<ProtectedRoute />}>
             <Route element={<MainLayout />}>
               <Route index element={<Dashboard />} />
@@ -39,6 +64,7 @@ function App() {
             </Route>
           </Route>
 
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import List
 from app.dependencies.deps import get_current_user
-from app.models.crm import LeadSchema, ClientSchema, TaskSchema
+from app.models.crm import LeadSchema, LeadUpdateSchema, CallLogSchema, ClientSchema, TaskSchema
 from app.services.crm import CRMService
 
 router = APIRouter()
@@ -21,8 +21,12 @@ async def create_leads_bulk(leads: List[LeadSchema], current_user: str = Depends
     return await CRMService.create_leads_bulk([l.model_dump() for l in leads])
 
 @router.put("/leads/{lead_id}")
-async def update_lead(lead_id: str, lead: LeadSchema, current_user: str = Depends(get_current_user)):
-    return await CRMService.update_lead(lead_id, lead.model_dump())
+async def update_lead(lead_id: str, lead: LeadUpdateSchema, current_user: str = Depends(get_current_user)):
+    return await CRMService.update_lead(lead_id, lead.model_dump(exclude_unset=True))
+
+@router.post("/leads/{lead_id}/calls")
+async def add_lead_call_log(lead_id: str, call_log: CallLogSchema, current_user: str = Depends(get_current_user)):
+    return await CRMService.save_call_log(lead_id, call_log.model_dump())
 
 @router.delete("/leads/{lead_id}")
 async def delete_lead(lead_id: str, current_user: str = Depends(get_current_user)):

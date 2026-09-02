@@ -18,9 +18,22 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        serif: ['Merriweather', 'serif'], // For premium headers
-      }
+        serif: ['Playfair Display', 'Merriweather', 'serif'],
+      },
+      animation: {
+        'float-3d': 'logo3dFloat 6s ease-in-out infinite',
+        'glow': 'logoGlow 3s ease-in-out infinite',
+        'shimmer': 'shimmerSweep 4s ease-in-out infinite',
+        'wave-1': 'waveFlow1 8s ease-in-out infinite',
+        'wave-2': 'waveFlow2 10s ease-in-out infinite',
+        'wave-3': 'waveFlow3 12s ease-in-out infinite',
+        'fade-up': 'fadeSlideUp 0.8s ease-out forwards',
+      },
+      backdropBlur: {
+        '3xl': '64px',
+      },
     },
   },
   plugins: [],
 }
+

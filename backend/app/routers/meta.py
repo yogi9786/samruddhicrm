@@ -6,7 +6,7 @@ from app.dependencies.deps import (
     get_meta_dms_dep
 )
 from app.models.meta import MetaSettings, SendDMRequest
-from app.core.firebase import db
+from app.core.database import get_db_connection, set_setting
 from datetime import datetime
 import uuid
 
@@ -24,7 +24,7 @@ async def update_meta_settings(
     settings: MetaSettings, 
     current_user: str = Depends(get_current_user)
 ):
-    db.collection("settings").document("meta").set(settings.model_dump())
+    set_setting("meta", settings.model_dump())
     return {"message": "Meta settings updated successfully"}
 
 @router.get("/leads")
@@ -52,14 +52,22 @@ async def send_meta_dm(
     
     new_message = {
         "id": msg_id,
-        "from": "Sirisamruddhi Gold Palace",
-        "to": req.recipient_id,
+        "sender": "Sirisamruddhi Gold Palace",
+        "recipient": req.recipient_id,
         "body": req.message_text,
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "channel": channel,
-        "platform_id": req.recipient_id
+        "platform_id": req.recipient_id,
+        "status": "sent"
     }
     
-    db.collection("messages").document(msg_id).set(new_message)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    INSERT INTO messages (id, sender, recipient, body, timestamp, channel, platform_id, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (new_message["id"], new_message["sender"], new_message["recipient"], new_message["body"], new_message["timestamp"], new_message["channel"], new_message["platform_id"], new_message["status"]))
+    conn.commit()
+    conn.close()
     
     return {"status": "success", "message": "DM sent successfully", "data": new_message}

@@ -1,7 +1,15 @@
 // VITE_API_URL is set via .env (local dev) or .env.production (production build).
-// Local dev:  VITE_API_URL=http://127.0.0.1:8000/api  (direct connection)
-// Production: VITE_API_URL=/api                        (Nginx proxies /api → 127.0.0.1:8000)
-const BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
+// Local dev:  VITE_API_URL=http://192.168.1.178:8000/api  (direct connection)
+// Production: VITE_API_URL=/api                          (Nginx proxies /api → 127.0.0.1:8000)
+
+export const getApiBaseUrl = (): string => {
+  const envVal = (import.meta.env.VITE_API_URL || "/api").trim();
+  if (envVal === "/api") return "/api";
+  if (envVal.endsWith("/api")) return envVal;
+  return `${envVal.replace(/\/+$/, '')}/api`;
+};
+
+export const BASE_URL = getApiBaseUrl();
 const REQUEST_TIMEOUT_MS = 10000; // 10 seconds
 
 export const getHeaders = () => {
@@ -12,7 +20,8 @@ export const getHeaders = () => {
 };
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  const url = `${BASE_URL}${endpoint}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${BASE_URL}${cleanEndpoint}`;
   const headers = {
     "Content-Type": "application/json",
     ...getHeaders(),

@@ -1,13 +1,17 @@
 import os
+import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 db = None
 firebase_initialized = False
 
+# Firebase is optional since CRM uses SQLite
 try:
     cred_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
     if cred_path:
@@ -18,15 +22,11 @@ try:
     if cred_path and os.path.exists(cred_path):
         import firebase_admin
         from firebase_admin import credentials, firestore
-        cred = credentials.Certificate(cred_path)
-        firebase_admin.initialize_app(cred)
-        db = firestore.client()
-        firebase_initialized = True
-    else:
-        import firebase_admin
-        from firebase_admin import firestore
-        firebase_admin.initialize_app()
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
         db = firestore.client()
         firebase_initialized = True
 except Exception as e:
-    raise RuntimeError(f"CRITICAL: Failed to initialize Firebase Admin SDK: {e}.")
+    logger.warning(f"Firebase Admin SDK initialization skipped/failed: {e}. Running in pure SQLite mode.")
+    firebase_initialized = False

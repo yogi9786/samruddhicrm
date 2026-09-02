@@ -1,15 +1,23 @@
 from datetime import datetime
 from collections import Counter
-from app.core.firebase import db
+from app.core.database import get_db_connection
 
 class AnalyticsService:
     @staticmethod
     async def get_summary() -> dict:
-        leads_ref = db.collection("leads").stream()
-        leads = [doc.to_dict() for doc in leads_ref]
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
-        clients_ref = db.collection("clients").stream()
-        clients = [doc.to_dict() for doc in clients_ref]
+        cursor.execute("SELECT * FROM leads")
+        leads = [dict(r) for r in cursor.fetchall()]
+        
+        cursor.execute("SELECT * FROM clients")
+        clients = [dict(r) for r in cursor.fetchall()]
+        
+        cursor.execute("SELECT * FROM tasks")
+        tasks = [dict(r) for r in cursor.fetchall()]
+        
+        conn.close()
         
         total_leads = len(leads)
         active_clients = len(clients)
@@ -36,8 +44,7 @@ class AnalyticsService:
         won_clients = len([c for c in clients if c.get("status") == "Won"])
         conversion_rate = round((won_clients / total_leads * 100), 1) if total_leads > 0 else 0.0
 
-        tasks_ref = db.collection("tasks").stream()
-        pending_tasks = len([t.to_dict() for t in tasks_ref if t.to_dict().get("status") == "Pending"])
+        pending_tasks = len([t for t in tasks if t.get("status") == "Pending"])
 
         return {
             "kpis": {
