@@ -44,7 +44,7 @@ export const GmbEntryScannerView: React.FC<GmbEntryScannerViewProps> = ({ token 
       await qrScanner.start(
         { facingMode: 'environment' },
         config,
-        (decodedText) => {
+        (decodedText: string) => {
           // Extract token if decoded text is full URL
           let cleanToken = decodedText;
           if (decodedText.includes('/pass/')) {
@@ -53,7 +53,7 @@ export const GmbEntryScannerView: React.FC<GmbEntryScannerViewProps> = ({ token 
           stopScanner();
           handleLookupToken(cleanToken);
         },
-        (errorMessage) => {
+        (errorMessage: string) => {
           // ignore frame scanning failures
         }
       );
@@ -66,7 +66,7 @@ export const GmbEntryScannerView: React.FC<GmbEntryScannerViewProps> = ({ token 
 
   const stopScanner = () => {
     if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-      html5QrCodeRef.current.stop().catch(err => console.error("Error stopping scanner", err));
+      html5QrCodeRef.current.stop().catch((err: any) => console.error("Error stopping scanner", err));
     }
     setScannerActive(false);
   };

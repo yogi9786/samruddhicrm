@@ -44,7 +44,7 @@ export const GmbGiftScannerView: React.FC<GmbGiftScannerViewProps> = ({ token })
       await qrScanner.start(
         { facingMode: 'environment' },
         config,
-        (decodedText) => {
+        (decodedText: string) => {
           let cleanToken = decodedText;
           if (decodedText.includes('/pass/')) {
             cleanToken = decodedText.split('/pass/').pop()?.split('?')[0] || decodedText;
@@ -52,7 +52,7 @@ export const GmbGiftScannerView: React.FC<GmbGiftScannerViewProps> = ({ token })
           stopScanner();
           handleLookupToken(cleanToken);
         },
-        (errorMessage) => {}
+        (errorMessage: string) => {}
       );
     } catch (err: any) {
       console.warn("Scanner start error:", err);
@@ -63,7 +63,7 @@ export const GmbGiftScannerView: React.FC<GmbGiftScannerViewProps> = ({ token })
 
   const stopScanner = () => {
     if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-      html5QrCodeRef.current.stop().catch(err => console.error("Error stopping scanner", err));
+      html5QrCodeRef.current.stop().catch((err: any) => console.error("Error stopping scanner", err));
     }
     setScannerActive(false);
   };
