@@ -66,7 +66,7 @@ export const Meta = () => {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [showToken, setShowToken] = useState(false);
 
-  const webhookUrl = `${window.location.origin.replace('5173', '8000')}/api/webhooks/meta/`;
+  const webhookUrl = `${window.location.origin}/api/webhooks/meta/`;
 
   const loadData = async () => {
     setLoading(true);

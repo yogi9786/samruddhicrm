@@ -120,7 +120,7 @@ async def register(req: GmbRegistrationCreate, request: Request):
     and queues WhatsApp / Email notifications.
     """
     # Use configured public host (ssgpcrm.cloud)
-    base_url = (os.getenv("GBM_PUBLIC_BASE_URL") or os.getenv("GMB_PUBLIC_BASE_URL") or "http://ssgpcrm.cloud").rstrip('/')
+    base_url = (os.getenv("GBM_PUBLIC_BASE_URL") or os.getenv("GMB_PUBLIC_BASE_URL") or "https://ssgpcrm.cloud").rstrip('/')
     try:
         res = await GmbService.register_attendee(req, base_url)
         return res

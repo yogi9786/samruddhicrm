@@ -1,12 +1,18 @@
 // VITE_API_URL is set via .env (local dev) or .env.production (production build).
-// Local dev:  VITE_API_URL=http://192.168.1.178:8000/api  (direct connection)
-// Production: VITE_API_URL=/api                          (Nginx proxies /api → 127.0.0.1:8000)
+// Local dev:  VITE_API_URL=http://192.168.1.105:8000/api  (direct connection)
+// Production: VITE_API_URL=/api                          (Nginx proxies /api/ → http://127.0.0.1:8005)
 
 export const getApiBaseUrl = (): string => {
-  const envVal = (import.meta.env.VITE_API_URL || "/api").trim();
-  if (envVal === "/api") return "/api";
-  if (envVal.endsWith("/api")) return envVal;
-  return `${envVal.replace(/\/+$/, '')}/api`;
+  let envVal = (import.meta.env.VITE_API_URL || "/api").trim();
+  // Strip trailing slashes
+  envVal = envVal.replace(/\/+$/, '');
+  if (!envVal || envVal === "/api") {
+    return "/api";
+  }
+  if (envVal.endsWith("/api")) {
+    return envVal;
+  }
+  return `${envVal}/api`;
 };
 
 export const BASE_URL = getApiBaseUrl();
@@ -20,7 +26,13 @@ export const getHeaders = () => {
 };
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  let cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  
+  // Guard against accidental double /api/ prefix if passed by caller
+  if (BASE_URL.endsWith('/api') && cleanEndpoint.startsWith('/api/')) {
+    cleanEndpoint = cleanEndpoint.substring(4);
+  }
+
   const url = `${BASE_URL}${cleanEndpoint}`;
   const headers = {
     "Content-Type": "application/json",
