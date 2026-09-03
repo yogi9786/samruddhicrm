@@ -1,18 +1,9 @@
-// VITE_API_URL is set via .env (local dev) or .env.production (production build).
-// Local dev:  VITE_API_URL=http://192.168.1.105:8000/api  (direct connection)
-// Production: VITE_API_URL=/api                          (Nginx proxies /api/ → http://127.0.0.1:8005)
-
 export const getApiBaseUrl = (): string => {
-  let envVal = (import.meta.env.VITE_API_URL || "/api").trim();
-  // Strip trailing slashes
-  envVal = envVal.replace(/\/+$/, '');
-  if (!envVal || envVal === "/api") {
+  const value = (import.meta.env.VITE_API_URL || "/api").trim();
+  if (!value || value === "/") {
     return "/api";
   }
-  if (envVal.endsWith("/api")) {
-    return envVal;
-  }
-  return `${envVal}/api`;
+  return value.replace(/\/+$/, "");
 };
 
 export const BASE_URL = getApiBaseUrl();

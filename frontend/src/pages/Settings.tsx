@@ -135,7 +135,7 @@ export const Settings = () => {
 
 
   // Webhook URLs are always relative to the current origin (e.g. https://ssgpcrm.cloud).
-  // Nginx proxies /api/ → http://127.0.0.1:8000, so the browser never needs to know about port 8000.
+  // Nginx proxies /api/ to the backend, so the browser uses same-origin /api.
   const backendBase = `${window.location.origin}/api`;
   const webhookUrls = [
     { label: 'Meta Webhook (FB Leads, FB Messages, IG Messages)', value: `${backendBase}/webhooks/meta/` },
