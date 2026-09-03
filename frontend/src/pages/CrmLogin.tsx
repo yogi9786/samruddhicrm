@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, Building, ArrowRight, Sparkles, RefreshCw, Eye, EyeOff, Check } from 'lucide-react';
+import { Lock, User, Building, ArrowRight, Sparkles, RefreshCw, Eye, EyeOff, Check, Shield, ChevronDown } from 'lucide-react';
 import { getApiBaseUrl } from '../utils/api';
+import { DEFAULT_BRANCHES } from './gmb/GmbRegistrationPage';
 
 const API_URL = getApiBaseUrl();
 
-const BRANCH_OPTIONS = [
-  { id: 'branch_yelahanka', name: 'Yelahanka', city: 'Bangalore' },
-  { id: 'branch_kolar', name: 'Kolar', city: 'Kolar' },
-  { id: 'branch_udupi', name: 'Udupi', city: 'Udupi' }
-];
-
 export const CrmLogin: React.FC = () => {
-  const [selectedBranch, setSelectedBranch] = useState<string>('branch_yelahanka');
+  const [selectedBranch, setSelectedBranch] = useState<string>('branch_bc002');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +16,7 @@ export const CrmLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
-  const selectedBranchObj = BRANCH_OPTIONS.find(b => b.id === selectedBranch) || BRANCH_OPTIONS[0];
+  const selectedBranchObj = DEFAULT_BRANCHES.find(b => b.id === selectedBranch) || DEFAULT_BRANCHES[0];
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,9 +45,14 @@ export const CrmLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC] text-slate-800 flex flex-col justify-center items-center p-4 sm:p-6 font-sans selection:bg-purple-600 selection:text-white">
-      <div className="w-full max-w-lg">
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 md:p-10 shadow-xl shadow-slate-200/50">
+    <div className="min-h-screen bg-[#F0F2F5] text-slate-800 flex flex-col justify-center items-center p-4 sm:p-6 font-sans relative overflow-hidden selection:bg-purple-600 selection:text-white">
+      {/* Background Decorative Ambient Glows matching Admin Layout */}
+      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-purple-900/10 via-purple-600/5 to-transparent pointer-events-none" />
+      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[360px] bg-gradient-to-tr from-purple-500/15 to-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 w-full max-w-lg my-6">
+        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl shadow-purple-950/5">
           
           {/* Top Pill Badge */}
           <div className="flex justify-center mb-6">
@@ -60,6 +60,15 @@ export const CrmLogin: React.FC = () => {
               <Sparkles size={14} className="text-purple-600" />
               <span>SIRI SAMRUDDHI CRM PORTAL</span>
             </div>
+          </div>
+
+          <div className="text-center mb-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Manager Login
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Select your showroom branch and enter manager credentials
+            </p>
           </div>
 
           {/* Error Banner */}
@@ -72,75 +81,47 @@ export const CrmLogin: React.FC = () => {
           <form onSubmit={handleLogin} className="space-y-6">
             
             {/* Step 1: Select Showroom Branch */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
-                    1
-                  </span>
-                  <span>Select Showroom Branch</span>
-                </label>
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-3">
+              <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
+                  1
+                </span>
+                <span>Select Showroom Branch</span>
+              </label>
 
-                <button
-                  type="button"
-                  className="text-xs font-semibold text-purple-700 hover:text-purple-900 flex items-center gap-1 transition-colors"
+              {/* Branch Dropdown Selector */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
+                  <Building size={18} />
+                </div>
+                <select
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  className="w-full pl-11 pr-10 py-3 bg-white border border-slate-300 rounded-2xl text-slate-900 font-bold text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer appearance-none shadow-sm"
                 >
-                  <RefreshCw size={13} />
-                  <span>Sync</span>
-                </button>
+                  {DEFAULT_BRANCHES.map((b) => (
+                    <option key={b.code} value={b.id} className="py-1">
+                      {b.code} - {b.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                  <ChevronDown size={18} />
+                </div>
               </div>
 
-              {/* Branch Cards (Matching Image 1 3-Color Style) */}
-              <div className="grid grid-cols-3 gap-3">
-                {BRANCH_OPTIONS.map((b, idx) => {
-                  const isSelected = selectedBranch === b.id;
-                  const cardStyles = isSelected
-                    ? 'bg-[#334155] border-[#334155] text-white shadow-md'
-                    : idx === 1
-                    ? 'bg-[#ECFDF5] border-[#A7F3D0] text-slate-800 hover:border-emerald-400'
-                    : 'bg-[#FFF7ED] border-[#FED7AA] text-slate-800 hover:border-amber-400';
-
-                  const iconColor = isSelected
-                    ? 'text-white'
-                    : idx === 1
-                    ? 'text-emerald-600'
-                    : 'text-amber-600';
-
-                  const subColor = isSelected
-                    ? 'text-slate-300'
-                    : idx === 1
-                    ? 'text-emerald-700'
-                    : 'text-amber-700';
-
-                  return (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={() => setSelectedBranch(b.id)}
-                      className={`p-3.5 rounded-2xl text-left border-2 transition-all flex flex-col justify-between min-h-[90px] relative ${cardStyles}`}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <Building size={18} className={iconColor} />
-                        {isSelected && (
-                          <div className="w-5 h-5 rounded-full bg-white text-[#334155] flex items-center justify-center">
-                            <Check size={12} className="stroke-[3]" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-2">
-                        <p className="font-bold text-xs sm:text-sm tracking-tight leading-tight">{b.name}</p>
-                        <p className={`text-[10px] mt-0.5 ${subColor}`}>{b.city}</p>
-                      </div>
-                    </button>
-                  );
-                })}
+              {/* Selected Branch Details */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-purple-50 border border-purple-200 text-xs shadow-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-slate-600 font-medium">Selected Branch:</span>
+                  <strong className="text-purple-950 font-bold">{selectedBranchObj.code} - {selectedBranchObj.name}</strong>
+                </div>
               </div>
             </div>
 
-            <hr className="border-slate-200/80 my-5" />
-
             {/* Step 2: Manager Credentials */}
-            <div className="space-y-4">
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-4">
               <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
                   2
@@ -150,8 +131,8 @@ export const CrmLogin: React.FC = () => {
 
               {/* Manager Name / Username Input */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Select Manager Name *
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Manager Username *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
@@ -162,16 +143,16 @@ export const CrmLogin: React.FC = () => {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="ADARSHA (ADARSHA1234)"
-                    className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all font-semibold"
+                    placeholder="e.g. ADARSHA (ADARSHA1234)"
+                    className="w-full pl-11 pr-3.5 py-3 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all font-semibold shadow-sm"
                   />
                 </div>
               </div>
 
               {/* Password Input */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Manager Password *
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Password *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
@@ -183,7 +164,7 @@ export const CrmLogin: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter showroom manager password"
-                    className="w-full pl-11 pr-11 py-3 bg-[#F8FAFC] border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all"
+                    className="w-full pl-11 pr-11 py-3 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all shadow-sm"
                   />
                   <button
                     type="button"
@@ -223,7 +204,7 @@ export const CrmLogin: React.FC = () => {
                 {loading ? (
                   <span className="flex items-center gap-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Signing in...
+                    <span>Signing in...</span>
                   </span>
                 ) : (
                   <>

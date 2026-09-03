@@ -408,14 +408,47 @@ def init_db():
         VALUES ('comp_ssgp', 'Siri Samruddhi Gold Palace', 'SSGP', 1, ?)
         """, (now,))
 
-    # Seed Branches: Yelahanka, Kolar, Udupi
+    # Seed 36 Branches from Official Branch Directory
     branches = [
-        ('branch_yelahanka', 'comp_ssgp', 'Yelahanka', 'YEL', 'Bengaluru'),
-        ('branch_kolar', 'comp_ssgp', 'Kolar', 'KOL', 'Kolar'),
-        ('branch_udupi', 'comp_ssgp', 'Udupi', 'UDU', 'Udupi'),
+        ('branch_bc002', 'comp_ssgp', 'Belthangady', 'BC002', 'Belthangady'),
+        ('branch_bc003', 'comp_ssgp', 'Udupi', 'BC003', 'Udupi'),
+        ('branch_bc004', 'comp_ssgp', 'Kolar', 'BC004', 'Kolar'),
+        ('branch_bc005', 'comp_ssgp', 'HO', 'BC005', 'Head Office'),
+        ('branch_bc006', 'comp_ssgp', 'Mysore', 'BC006', 'Mysore'),
+        ('branch_bc007', 'comp_ssgp', 'Sira', 'BC007', 'Sira'),
+        ('branch_bc008', 'comp_ssgp', 'Hubli', 'BC008', 'Hubli'),
+        ('branch_bc014', 'comp_ssgp', 'Kanakapura', 'BC014', 'Kanakapura'),
+        ('branch_bc016', 'comp_ssgp', 'JP Nagar', 'BC016', 'Bengaluru'),
+        ('branch_bc017', 'comp_ssgp', 'Sirsi', 'BC017', 'Sirsi'),
+        ('branch_bc019', 'comp_ssgp', 'Anekal', 'BC019', 'Anekal'),
+        ('branch_ka0001', 'comp_ssgp', 'Yellapur', 'KA0001', 'Yellapur'),
+        ('branch_ka0003', 'comp_ssgp', 'Puttur', 'KA0003', 'Puttur'),
+        ('branch_ka0004', 'comp_ssgp', 'Bijapur', 'KA0004', 'Bijapur'),
+        ('branch_ka0005', 'comp_ssgp', 'Siddapur', 'KA0005', 'Siddapur'),
+        ('branch_ka0006', 'comp_ssgp', 'Karwar', 'KA0006', 'Karwar'),
+        ('branch_ka0007', 'comp_ssgp', 'Gadag', 'KA0007', 'Gadag'),
+        ('branch_ka0009', 'comp_ssgp', 'Kumta', 'KA0009', 'Kumta'),
+        ('branch_ka0010', 'comp_ssgp', 'Shimoga', 'KA0010', 'Shimoga'),
+        ('branch_ka0011', 'comp_ssgp', 'Mangalore', 'KA0011', 'Mangalore'),
+        ('branch_ka0012', 'comp_ssgp', 'Haliyal', 'KA0012', 'Haliyal'),
+        ('branch_ka0013', 'comp_ssgp', 'RT Nagar', 'KA0013', 'Bengaluru'),
+        ('branch_ka0014', 'comp_ssgp', 'KR Puram', 'KA0014', 'Bengaluru'),
+        ('branch_ka0015', 'comp_ssgp', 'Kundapura', 'KA0015', 'Kundapura'),
+        ('branch_ka0016', 'comp_ssgp', 'Sagara', 'KA0016', 'Sagara'),
+        ('branch_ka0017', 'comp_ssgp', 'Chithradurga', 'KA0017', 'Chithradurga'),
+        ('branch_ka0018', 'comp_ssgp', 'Sarjapura', 'KA0018', 'Bengaluru'),
+        ('branch_ka0019', 'comp_ssgp', 'Basaveshwaranagar', 'KA0019', 'Bengaluru'),
+        ('branch_ka0020', 'comp_ssgp', 'Bhadravathi', 'KA0020', 'Bhadravathi'),
+        ('branch_ka0021', 'comp_ssgp', 'Murudeshwara', 'KA0021', 'Murudeshwara'),
+        ('branch_ka0022', 'comp_ssgp', 'Thirthahalli', 'KA0022', 'Thirthahalli'),
+        ('branch_ka0023', 'comp_ssgp', 'Raichur', 'KA0023', 'Raichur'),
+        ('branch_ka0024', 'comp_ssgp', 'Sullia', 'KA0024', 'Sullia'),
+        ('branch_ka0025', 'comp_ssgp', 'Lakshmeshwar', 'KA0025', 'Lakshmeshwar'),
+        ('branch_ka0026', 'comp_ssgp', 'Ranebnnur', 'KA0026', 'Ranebnnur'),
+        ('branch_ka0027', 'comp_ssgp', 'Malavalli', 'KA0027', 'Malavalli'),
     ]
     for b_id, c_id, name, code, city in branches:
-        cursor.execute("SELECT id FROM gmb_branches WHERE id = ?", (b_id,))
+        cursor.execute("SELECT id FROM gmb_branches WHERE code = ? OR id = ?", (code, b_id))
         if not cursor.fetchone():
             cursor.execute("""
             INSERT INTO gmb_branches (id, company_id, name, code, city, is_active, created_at)
