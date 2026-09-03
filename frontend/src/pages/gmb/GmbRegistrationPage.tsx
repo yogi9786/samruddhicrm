@@ -108,15 +108,69 @@ export const GmbRegistrationPage: React.FC = () => {
     };
   }, []);
 
-  // Trigger confetti upon successful registration
+  // Trigger celebration confetti upon successful registration (pure native zero-dependency)
   useEffect(() => {
     if (registrationResult) {
-      confetti({
-        particleCount: 140,
-        spread: 90,
-        origin: { y: 0.6 },
-        colors: ['#7C3AED', '#6D28D9', '#D97706', '#10B981', '#F59E0B']
-      });
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '999999';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const colors = ['#F59E0B', '#7C3AED', '#EC4899', '#10B981', '#3B82F6', '#EF4444'];
+        const particles: any[] = [];
+        for (let i = 0; i < 90; i++) {
+          particles.push({
+            x: canvas.width * 0.5,
+            y: canvas.height * 0.55,
+            vx: (Math.random() - 0.5) * 14,
+            vy: (Math.random() - 0.75) * 18,
+            size: Math.random() * 8 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            vr: (Math.random() - 0.5) * 10,
+            opacity: 1
+          });
+        }
+
+        let frames = 0;
+        const animate = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.4;
+            p.rotation += p.vr;
+            p.opacity -= 0.012;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, p.opacity);
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.restore();
+          });
+          frames++;
+          if (frames < 90) {
+            requestAnimationFrame(animate);
+          } else {
+            canvas.remove();
+          }
+        };
+        animate();
+      } catch (e) {
+        // Safe fallback
+      }
     }
   }, [registrationResult]);
 

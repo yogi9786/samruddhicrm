@@ -242,7 +242,7 @@ export const GmbGiftScannerView: React.FC<GmbGiftScannerViewProps> = ({ token })
             </div>
 
             <div className="space-y-1 min-w-0">
-              <h3 className="text-lg font-bold text-white font-serif truncate text-amber-300">
+              <h3 className="text-lg font-bold font-serif truncate text-amber-300">
                 {scannedResult.name}
               </h3>
               <p className="text-xs text-slate-300">{scannedResult.designation}</p>
