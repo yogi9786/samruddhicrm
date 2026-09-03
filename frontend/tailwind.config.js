@@ -14,10 +14,23 @@ export default {
           goldLight: "#FBBF24",
           orange: "#F97316",   // Logo sun rays
           cream: "#FEFCE8",    // Soft background for jewelry theme
+          purple: "#6D28D9",
+          purpleDark: "#4C1D95",
+          purpleLight: "#EDE9FE",
+        },
+        luxury: {
+          dark: "#0F1117",
+          sidebar: "#12141C",
+          surface: "#1A1D27",
+          border: "#262A38",
+          purple: "#6366F1",
+          cardLight: "#FFFFFF",
+          bgLight: "#F8F9FC",
         }
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['Outfit', '"Plus Jakarta Sans"', 'sans-serif'],
         serif: ['Playfair Display', 'Merriweather', 'serif'],
       },
       animation: {

@@ -32,22 +32,24 @@ class GmbOtpService:
 
         now = datetime.now(timezone.utc)
 
-        # 1. Check for active cooldown (e.g. 60 seconds)
-        cursor.execute("""
-        SELECT created_at FROM gmb_otp_challenges
-        WHERE mobile = ? AND is_verified = 0
-        ORDER BY created_at DESC LIMIT 1
-        """, (mobile,))
-        last = cursor.fetchone()
-        if last and last["created_at"]:
-            try:
-                last_time = datetime.fromisoformat(last["created_at"].replace("Z", "+00:00"))
-                if (now - last_time).total_seconds() < 45:
-                    conn.close()
-                    remaining = int(45 - (now - last_time).total_seconds())
-                    return False, "", f"Please wait {remaining} seconds before requesting a new OTP", None
-            except Exception:
-                pass
+        # 1. Check for active cooldown (e.g. 45 seconds) unless test number
+        TEST_NUMBERS = {"7996633015", "+917996633015", "917996633015"}
+        if mobile not in TEST_NUMBERS:
+            cursor.execute("""
+            SELECT created_at FROM gmb_otp_challenges
+            WHERE mobile = ? AND is_verified = 0
+            ORDER BY created_at DESC LIMIT 1
+            """, (mobile,))
+            last = cursor.fetchone()
+            if last and last["created_at"]:
+                try:
+                    last_time = datetime.fromisoformat(last["created_at"].replace("Z", "+00:00"))
+                    if (now - last_time).total_seconds() < 45:
+                        conn.close()
+                        remaining = int(45 - (now - last_time).total_seconds())
+                        return False, "", f"Please wait {remaining} seconds before requesting a new OTP", None
+                except Exception:
+                    pass
 
         # 2. Generate cryptographically strong random OTP
         if DIGINTRA_OTP_LENGTH == 4:

@@ -4,18 +4,48 @@ import os
 import hashlib
 from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Database file location in backend directory
 DB_PATH = Path(__file__).resolve().parents[2] / "sirisamruddhi_crm.db"
 
+def get_postgres_connection():
+    """Attempts to connect to PostgreSQL using DATABASE_URL or individual POSTGRES_* params"""
+    try:
+        import psycopg2
+        from psycopg2.extras import RealDictCursor
+        
+        db_url = os.getenv("DATABASE_URL")
+        if db_url:
+            conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
+        else:
+            conn = psycopg2.connect(
+                host=os.getenv("POSTGRES_HOST", "localhost"),
+                port=int(os.getenv("POSTGRES_PORT", 5432)),
+                dbname=os.getenv("POSTGRES_DB", "sirisamruddhi_crm"),
+                user=os.getenv("POSTGRES_USER", "sirisamruddhi_admin"),
+                password=os.getenv("POSTGRES_PASSWORD", "SiriGold@Secure2026!$#AdminDb"),
+                cursor_factory=RealDictCursor
+            )
+        return conn
+    except Exception as e:
+        # Graceful fallback to SQLite
+        return None
+
 def get_db_connection():
-    conn = sqlite3.connect(str(DB_PATH), timeout=30.0, check_same_thread=False)
+    """
+    Returns an active database connection.
+    Uses SQLite with WAL mode and autocommit (isolation_level=None) for non-blocking concurrency.
+    """
+    conn = sqlite3.connect(str(DB_PATH), timeout=60.0, check_same_thread=False, isolation_level=None)
     conn.row_factory = sqlite3.Row
     # Enable WAL mode and busy timeout for high concurrency
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("PRAGMA foreign_keys=ON")
-    conn.execute("PRAGMA busy_timeout=15000")
+    conn.execute("PRAGMA busy_timeout=30000")
     return conn
 
 def get_setting(key: str, default: dict = None) -> dict:
@@ -413,18 +443,31 @@ def init_db():
             VALUES (?, ?, ?, ?, 1, ?)
             """, (g_id, g_name, g_gender, g_desc, now))
 
-    # Seed Default Staff Users (Admin, Gate Staff, Gift Staff)
-    # Admin: siriadmin / siriadmin1234
-    # Gate Staff: gate_staff1 / gate1234
-    # Gift Staff: gift_staff1 / gift1234
+    # Seed Default Staff Users (Admin, Staff 1-10, Gate Staff, Gift Staff)
+    # Allows 5-10 staff members to login concurrently via individual or shared accounts
     default_staff = [
         ('staff_admin', 'siriadmin', hash_password('siriadmin1234'), 'GBM Chief Admin', 'ADMIN', ''),
         ('staff_env_user', 'staff', hash_password('staff1234'), 'Authorized Event Staff', 'ADMIN', ''),
-        ('staff_gate1', 'gate_staff1', hash_password('gate1234'), 'Ramesh Kumar (Gate 1)', 'GATE_STAFF', 'branch_yelahanka'),
-        ('staff_gift1', 'gift_staff1', hash_password('gift1234'), 'Priya Sharma (Counter 1)', 'GIFT_STAFF', 'branch_yelahanka'),
+        ('staff_adarsha', 'ADARSHA', hash_password('ADARSHA1234'), 'Adarsha (Showroom Manager)', 'ADMIN', 'branch_yelahanka'),
+        ('staff_gate1', 'gate_staff1', hash_password('gate1234'), 'Gate Staff 1', 'GATE_STAFF', 'branch_yelahanka'),
+        ('staff_gate2', 'gate_staff2', hash_password('gate1234'), 'Gate Staff 2', 'GATE_STAFF', 'branch_kolar'),
+        ('staff_gift1', 'gift_staff1', hash_password('gift1234'), 'Gift Counter Staff 1', 'GIFT_STAFF', 'branch_yelahanka'),
+        ('staff_gift2', 'gift_staff2', hash_password('gift1234'), 'Gift Counter Staff 2', 'GIFT_STAFF', 'branch_kolar'),
     ]
+
+    # Pre-seed staff1 through staff10 with default password 'staff1234'
+    for i in range(1, 11):
+        default_staff.append((
+            f'staff_user_{i}',
+            f'staff{i}',
+            hash_password('staff1234'),
+            f'Event Staff Member {i}',
+            'ADMIN',
+            'branch_yelahanka'
+        ))
+
     for s_id, s_user, s_pass, s_name, s_role, s_branch in default_staff:
-        cursor.execute("SELECT id FROM gmb_staff_users WHERE username = ?", (s_user,))
+        cursor.execute("SELECT id FROM gmb_staff_users WHERE LOWER(username) = LOWER(?)", (s_user,))
         if not cursor.fetchone():
             cursor.execute("""
             INSERT INTO gmb_staff_users (id, username, password_hash, full_name, role, branch_id, is_active, created_at)

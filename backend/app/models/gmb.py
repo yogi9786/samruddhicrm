@@ -290,6 +290,11 @@ class GmbStatusOverrideRequest(BaseModel):
     entry_status: Optional[EntryStatus] = None
     gift_status: Optional[GiftStatus] = None
     gift_type_id: Optional[str] = None
+    name: Optional[str] = None
+    designation: Optional[str] = None
+    employee_id: Optional[str] = None
+    gender: Optional[str] = None
+    branch_id: Optional[str] = None
     remark: Optional[str] = "Manual staff override"
     username: Optional[str] = None
     password: Optional[str] = None
@@ -304,3 +309,14 @@ class GmbStatusOverrideResponse(BaseModel):
     gift_status: GiftStatus
     updated_at: str
     updated_by: str
+
+class GmbParticipantEditRequest(BaseModel):
+    name: Optional[str] = None
+    designation: Optional[str] = None
+    employee_id: Optional[str] = None
+    mobile: Optional[str] = None
+    email: Optional[str] = None
+    gender: Optional[str] = None
+    branch_id: Optional[str] = None
+    entry_status: Optional[EntryStatus] = None
+    gift_status: Optional[GiftStatus] = None

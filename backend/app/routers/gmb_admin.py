@@ -17,9 +17,11 @@ from app.models.gmb import (
     GmbGiftClaimRequest, GmbGiftClaimResponse,
     GmbDashboardMetricsResponse,
     GmbRegistrationListResponse,
-    GmbStatusOverrideRequest, GmbStatusOverrideResponse
+    GmbStatusOverrideRequest, GmbStatusOverrideResponse,
+    GmbParticipantEditRequest
 )
 from app.services.gmb_service import GmbService
+from app.services.gmb_pdf import GmbPdfService
 from app.services.gmb_comms import AiSensyService, BrevoEmailService
 
 load_dotenv()
@@ -69,8 +71,11 @@ def require_role(allowed_roles: List[str]):
 
 @router.post("/login", response_model=GmbStaffLoginResponse)
 def staff_login(req: GmbStaffLoginRequest):
+    u = req.username.strip()
+    p = req.password.strip()
+
     # 1. Check Primary Admin credentials from .env
-    if req.username == ADMIN_USERNAME and req.password == ADMIN_PASSWORD:
+    if u.lower() == ADMIN_USERNAME.lower() and p == ADMIN_PASSWORD:
         token = create_staff_jwt({
             "sub": ADMIN_USERNAME,
             "role": "ADMIN",
@@ -87,7 +92,7 @@ def staff_login(req: GmbStaffLoginRequest):
         )
 
     # 2. Check Staff credentials from .env
-    if req.username == STAFF_USERNAME and req.password == STAFF_PASSWORD:
+    if u.lower() == STAFF_USERNAME.lower() and p == STAFF_PASSWORD:
         token = create_staff_jwt({
             "sub": STAFF_USERNAME,
             "role": "ADMIN",
@@ -103,23 +108,27 @@ def staff_login(req: GmbStaffLoginRequest):
             branch_id=""
         )
 
-    # 2. Check Database Staff Table
+    # 3. Check Database Staff Table (Case-insensitive)
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
     SELECT id, username, password_hash, full_name, role, branch_id, is_active
     FROM gmb_staff_users
-    WHERE username = ? AND is_active = 1
-    """, (req.username,))
+    WHERE LOWER(username) = LOWER(?) AND is_active = 1
+    """, (u,))
     staff = cursor.fetchone()
     conn.close()
 
-    if not staff or hash_password(req.password) != staff["password_hash"]:
+    if not staff or hash_password(p) != staff["password_hash"]:
         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    user_role = staff["role"]
+    if user_role not in [r.value for r in StaffRole]:
+        user_role = "ADMIN"
 
     token = create_staff_jwt({
         "sub": staff["username"],
-        "role": staff["role"],
+        "role": user_role,
         "staff_id": staff["id"],
         "full_name": staff["full_name"],
         "branch_id": staff["branch_id"] or ""
@@ -128,7 +137,7 @@ def staff_login(req: GmbStaffLoginRequest):
     return GmbStaffLoginResponse(
         access_token=token,
         token_type="bearer",
-        role=StaffRole(staff["role"]),
+        role=StaffRole(user_role),
         full_name=staff["full_name"],
         username=staff["username"],
         branch_id=staff["branch_id"] or ""
@@ -215,6 +224,147 @@ def get_registration_details(reg_id: str, staff: Dict[str, Any] = Depends(get_cu
     res["whatsapp_logs"] = wa_logs
     res["email_logs"] = em_logs
     return res
+
+@router.put("/registrations/{reg_id}")
+def update_registration_participant(
+    reg_id: str,
+    req: GmbParticipantEditRequest,
+    staff: Dict[str, Any] = Depends(require_role(["ADMIN"]))
+):
+    """
+    Admin updates participant details (name, employee_id, mobile, email, branch, designation, gender, entry_status, gift_status).
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM gmb_registrations WHERE id = ?", (reg_id,))
+    reg = cursor.fetchone()
+    if not reg:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Participant registration not found.")
+
+    # Check for duplicate mobile or employee_id if changing
+    if req.mobile and req.mobile.strip() != reg["mobile"]:
+        cursor.execute("SELECT id FROM gmb_registrations WHERE mobile = ? AND id != ?", (req.mobile.strip(), reg_id))
+        if cursor.fetchone():
+            conn.close()
+            raise HTTPException(status_code=400, detail="Another participant with this mobile number already exists.")
+
+    if req.employee_id and req.employee_id.strip().upper() != reg["employee_id"]:
+        cursor.execute("SELECT id FROM gmb_registrations WHERE employee_id = ? AND id != ?", (req.employee_id.strip().upper(), reg_id))
+        if cursor.fetchone():
+            conn.close()
+            raise HTTPException(status_code=400, detail=f"Another participant with Employee ID '{req.employee_id}' already exists.")
+
+    try:
+        updated_name = req.name.strip() if req.name and req.name.strip() else reg["name"]
+        updated_desig = req.designation.strip() if req.designation and req.designation.strip() else reg["designation"]
+        updated_emp_id = req.employee_id.strip().upper() if req.employee_id and req.employee_id.strip() else reg["employee_id"]
+        updated_mobile = req.mobile.strip() if req.mobile and req.mobile.strip() else reg["mobile"]
+        updated_email = req.email.strip() if req.email is not None else reg["email"]
+        updated_gender = req.gender.strip().lower() if req.gender and req.gender.strip() else reg["gender"]
+        updated_branch = req.branch_id.strip() if req.branch_id and req.branch_id.strip() else reg["branch_id"]
+        
+        updated_entry = req.entry_status.value if hasattr(req.entry_status, 'value') else (req.entry_status or reg["entry_status"])
+        updated_gift = req.gift_status.value if hasattr(req.gift_status, 'value') else (req.gift_status or reg["gift_status"])
+
+        cursor.execute("""
+        UPDATE gmb_registrations
+        SET name = ?, designation = ?, employee_id = ?, mobile = ?, email = ?,
+            gender = ?, branch_id = ?, entry_status = ?, gift_status = ?
+        WHERE id = ?
+        """, (
+            updated_name, updated_desig, updated_emp_id, updated_mobile, updated_email,
+            updated_gender, updated_branch, updated_entry, updated_gift, reg_id
+        ))
+
+        # Audit log
+        now = datetime.now().isoformat() + "Z"
+        log_id = f"log_{uuid.uuid4().hex[:12]}"
+        cursor.execute("""
+        INSERT INTO gmb_scan_logs (id, pass_id, registration_id, action, result, staff_id, staff_name, scanner_type, reason, created_at)
+        VALUES (?, '', ?, 'ADMIN_EDIT', 'SUCCESS', ?, ?, 'ADMIN', 'Admin edited participant details', ?)
+        """, (log_id, reg_id, staff.get("staff_id", "staff_admin"), staff.get("full_name", "Admin"), now))
+
+        # Query pass data for PDF regeneration on the SAME connection before closing
+        cursor.execute("""
+        SELECT p.qr_token, b.name as branch_name, c.name as company_name, r.photo_url, r.aadhaar_masked
+        FROM gmb_event_passes p
+        JOIN gmb_registrations r ON p.registration_id = r.id
+        LEFT JOIN gmb_branches b ON r.branch_id = b.id
+        LEFT JOIN gmb_companies c ON r.company_id = c.id
+        WHERE r.id = ?
+        """, (reg_id,))
+        pass_row = cursor.fetchone()
+
+        conn.commit()
+        conn.close()
+
+        # Re-generate PDF if pass exists
+        if pass_row and pass_row["qr_token"]:
+            try:
+                public_base_url = os.getenv("GMB_PUBLIC_BASE_URL", "http://localhost:5173")
+                GmbPdfService.generate_event_pass_pdf(
+                    qr_token=pass_row["qr_token"],
+                    name=updated_name,
+                    designation=updated_desig,
+                    employee_id=updated_emp_id,
+                    branch_name=pass_row["branch_name"] or "Yelahanka",
+                    company_name=pass_row["company_name"] or "Siri Samruddhi Gold Palace",
+                    masked_aadhaar=pass_row["aadhaar_masked"] or "",
+                    gender=updated_gender,
+                    photo_filename=pass_row["photo_url"] or "",
+                    public_base_url=public_base_url
+                )
+            except Exception as pdf_err:
+                print(f"Error refreshing PDF pass after edit: {pdf_err}")
+
+        return {
+            "success": True,
+            "message": f"Participant '{updated_name}' updated successfully.",
+            "id": reg_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/registrations/{reg_id}")
+def delete_registration_participant(
+    reg_id: str,
+    staff: Dict[str, Any] = Depends(require_role(["ADMIN"]))
+):
+    """
+    Admin permanently deletes a participant registration and its associated passes/logs.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, employee_id FROM gmb_registrations WHERE id = ?", (reg_id,))
+    reg = cursor.fetchone()
+    if not reg:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Participant registration not found.")
+
+    name = reg["name"]
+    emp_id = reg["employee_id"]
+
+    # Delete related records
+    cursor.execute("DELETE FROM gmb_entry_scans WHERE registration_id = ?", (reg_id,))
+    cursor.execute("DELETE FROM gmb_gift_redemptions WHERE registration_id = ?", (reg_id,))
+    cursor.execute("DELETE FROM gmb_scan_logs WHERE registration_id = ?", (reg_id,))
+    cursor.execute("DELETE FROM gmb_whatsapp_logs WHERE registration_id = ?", (reg_id,))
+    cursor.execute("DELETE FROM gmb_email_logs WHERE registration_id = ?", (reg_id,))
+    cursor.execute("DELETE FROM gmb_event_passes WHERE registration_id = ?", (reg_id,))
+    cursor.execute("DELETE FROM gmb_registrations WHERE id = ?", (reg_id,))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": f"Participant '{name}' ({emp_id}) deleted successfully."
+    }
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SCANNER APIS (Gate Entry & Gift Redemption)
@@ -322,6 +472,11 @@ def override_status(
             entry_status=req.entry_status.value if req.entry_status else None,
             gift_status=req.gift_status.value if req.gift_status else None,
             gift_type_id=req.gift_type_id,
+            name=req.name,
+            designation=req.designation,
+            employee_id=req.employee_id,
+            gender=req.gender,
+            branch_id=req.branch_id,
             staff_id=staff_id,
             staff_name=staff_name,
             remark=req.remark or "Manual staff override"

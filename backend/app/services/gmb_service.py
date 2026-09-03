@@ -52,17 +52,33 @@ class GmbService:
         cursor = conn.cursor()
 
         # 2. Check for duplicate mobile or employee ID for this event
-        cursor.execute("""
-        SELECT id, name, mobile, employee_id FROM gmb_registrations
-        WHERE event_id = ? AND (mobile = ? OR employee_id = ?)
-        """, (payload.event_id, payload.mobile, payload.employee_id))
-        existing = cursor.fetchone()
-        if existing:
-            conn.close()
-            if existing["mobile"] == payload.mobile:
-                raise ValueError("A registration with this mobile number already exists for this event.")
-            else:
-                raise ValueError(f"A registration with Employee ID '{payload.employee_id}' already exists for this event.")
+        TEST_NUMBERS = {"7996633015", "+917996633015", "917996633015"}
+        if payload.mobile in TEST_NUMBERS:
+            # Allow unlimited testing for test number by cleaning up prior test registrations
+            cursor.execute("SELECT id FROM gmb_registrations WHERE mobile = ?", (payload.mobile,))
+            old_rows = cursor.fetchall()
+            for r in old_rows:
+                old_id = r["id"]
+                cursor.execute("DELETE FROM gmb_entry_scans WHERE registration_id = ?", (old_id,))
+                cursor.execute("DELETE FROM gmb_gift_redemptions WHERE registration_id = ?", (old_id,))
+                cursor.execute("DELETE FROM gmb_scan_logs WHERE registration_id = ?", (old_id,))
+                cursor.execute("DELETE FROM gmb_whatsapp_logs WHERE registration_id = ?", (old_id,))
+                cursor.execute("DELETE FROM gmb_email_logs WHERE registration_id = ?", (old_id,))
+                cursor.execute("DELETE FROM gmb_event_passes WHERE registration_id = ?", (old_id,))
+                cursor.execute("DELETE FROM gmb_registrations WHERE id = ?", (old_id,))
+            conn.commit()
+        else:
+            cursor.execute("""
+            SELECT id, name, mobile, employee_id FROM gmb_registrations
+            WHERE event_id = ? AND (mobile = ? OR employee_id = ?)
+            """, (payload.event_id, payload.mobile, payload.employee_id))
+            existing = cursor.fetchone()
+            if existing:
+                conn.close()
+                if existing["mobile"] == payload.mobile:
+                    raise ValueError("A registration with this mobile number already exists for this event.")
+                else:
+                    raise ValueError(f"A registration with Employee ID '{payload.employee_id}' already exists for this event.")
 
         # 3. Retrieve Company & Branch details
         cursor.execute("SELECT name FROM gmb_companies WHERE id = ?", (payload.company_id,))
@@ -180,8 +196,8 @@ class GmbService:
         JOIN gmb_registrations r ON p.registration_id = r.id
         JOIN gmb_branches b ON r.branch_id = b.id
         JOIN gmb_companies c ON r.company_id = c.id
-        WHERE p.qr_token = ? OR p.download_token = ?
-        """, (token, token))
+        WHERE p.qr_token = ? OR p.download_token = ? OR r.id = ?
+        """, (token, token, token))
         row = cursor.fetchone()
         conn.close()
         return dict(row) if row else None
@@ -611,6 +627,11 @@ class GmbService:
         entry_status: Optional[str] = None,
         gift_status: Optional[str] = None,
         gift_type_id: Optional[str] = None,
+        name: Optional[str] = None,
+        designation: Optional[str] = None,
+        employee_id: Optional[str] = None,
+        gender: Optional[str] = None,
+        branch_id: Optional[str] = None,
         staff_id: str = "staff_admin",
         staff_name: str = "Staff",
         remark: str = "Manual staff override"
@@ -621,14 +642,14 @@ class GmbService:
         # Find registration and pass
         if qr_token:
             cursor.execute("""
-            SELECT r.id, r.name, r.entry_status, r.gift_status, r.gender, p.id as pass_id, p.qr_token
+            SELECT r.id, r.name, r.entry_status, r.gift_status, r.gender, r.designation, r.employee_id, r.branch_id, p.id as pass_id, p.qr_token
             FROM gmb_event_passes p
             JOIN gmb_registrations r ON p.registration_id = r.id
             WHERE p.qr_token = ?
             """, (qr_token,))
         elif registration_id:
             cursor.execute("""
-            SELECT r.id, r.name, r.entry_status, r.gift_status, r.gender, p.id as pass_id, p.qr_token
+            SELECT r.id, r.name, r.entry_status, r.gift_status, r.gender, r.designation, r.employee_id, r.branch_id, p.id as pass_id, p.qr_token
             FROM gmb_registrations r
             LEFT JOIN gmb_event_passes p ON r.id = p.registration_id
             WHERE r.id = ?
@@ -645,21 +666,26 @@ class GmbService:
         reg_id = row["id"]
         pass_id = row["pass_id"] or ""
         token = row["qr_token"] or qr_token or ""
-        name = row["name"]
-        gender = row["gender"]
+        curr_name = row["name"]
+        curr_gender = row["gender"]
         curr_entry = row["entry_status"]
         curr_gift = row["gift_status"]
         now = datetime.now().isoformat() + "Z"
 
         new_entry = entry_status if entry_status else curr_entry
         new_gift = gift_status if gift_status else curr_gift
+        updated_name = name.strip() if name and name.strip() else curr_name
+        updated_gender = gender.strip().lower() if gender and gender.strip() else curr_gender
+        updated_desig = designation.strip() if designation and designation.strip() else row["designation"]
+        updated_emp_id = employee_id.strip().upper() if employee_id and employee_id.strip() else row["employee_id"]
+        updated_branch = branch_id.strip() if branch_id and branch_id.strip() else row["branch_id"]
 
-        # 1. Update registration entry_status and gift_status
+        # 1. Update registration entry_status, gift_status and delegate details
         cursor.execute("""
         UPDATE gmb_registrations
-        SET entry_status = ?, gift_status = ?
+        SET entry_status = ?, gift_status = ?, name = ?, gender = ?, designation = ?, employee_id = ?, branch_id = ?
         WHERE id = ?
-        """, (new_entry, new_gift, reg_id))
+        """, (new_entry, new_gift, updated_name, updated_gender, updated_desig, updated_emp_id, updated_branch, reg_id))
 
         # 2. If changing to ENTERED and not in gmb_entry_scans, insert record
         if new_entry == "ENTERED" and curr_entry != "ENTERED" and pass_id:
@@ -671,8 +697,8 @@ class GmbService:
 
         # 3. If changing to CLAIMED and not in gmb_gift_redemptions, insert record
         if new_gift == "CLAIMED" and curr_gift != "CLAIMED" and pass_id:
-            gift_name = "Executive Prestige Gift Set" if str(gender).lower() == "male" else "Pure Silk Saree & Jewelry Box"
-            gid = gift_type_id or ("gift_male" if str(gender).lower() == "male" else "gift_female")
+            gift_name = "Executive Prestige Gift Set" if str(updated_gender).lower() == "male" else "Pure Silk Saree & Jewelry Box"
+            gid = gift_type_id or ("gift_male" if str(updated_gender).lower() == "male" else "gift_female")
             redemp_id = f"redemp_{uuid.uuid4().hex[:12]}"
             cursor.execute("""
             INSERT INTO gmb_gift_redemptions (id, pass_id, registration_id, gift_type_id, gift_name, staff_id, staff_name, counter_name, status, redeemed_at)
@@ -692,10 +718,10 @@ class GmbService:
 
         return {
             "success": True,
-            "message": f"Successfully updated status for {name}: Entry={new_entry}, Gift={new_gift}",
+            "message": f"Successfully updated status for {updated_name}: Entry={new_entry}, Gift={new_gift}",
             "registration_id": reg_id,
             "qr_token": token,
-            "name": name,
+            "name": updated_name,
             "entry_status": new_entry,
             "gift_status": new_gift,
             "updated_at": now,

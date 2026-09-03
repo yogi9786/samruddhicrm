@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -15,7 +15,10 @@ import {
   Menu,
   X,
   Camera,
-  Gem
+  Compass,
+  FileText,
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/logo.png';
@@ -35,6 +38,7 @@ const urlBase64ToUint8Array = (base64String: string) => {
 export const MainLayout = () => {
   const { logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const pageTitles: Record<string, string> = {
@@ -86,130 +90,174 @@ export const MainLayout = () => {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden relative" style={{ backgroundColor: '#fdf8f0' }}>
+    <div className="flex h-screen overflow-hidden relative bg-[#F8F9FC] font-sans selection:bg-purple-600 selection:text-white">
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      {/* Premium Dark Sidebar */}
+      {/* ── Luxury Dark Sidebar (Matching Image 2) ───────────────────────── */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#111318] border-r border-[#1F2430] flex flex-col justify-between transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
-        style={{ background: 'linear-gradient(160deg, #3d0000 0%, #5a0000 50%, #800000 100%)', boxShadow: '4px 0 24px rgba(0,0,0,0.25)' }}
       >
-        {/* Logo Area */}
-        <div className="p-5 flex justify-between items-center" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white overflow-hidden" style={{ border: '1px solid rgba(245,158,11,0.3)' }}>
-              <img src={logo} alt="Sirisamruddhi Logo" className="w-full h-full object-contain p-1" />
+        <div className="flex flex-col flex-1 min-h-0">
+          
+          {/* Logo & Brand Header */}
+          <div className="p-5 flex items-center justify-between border-b border-[#1E2330]">
+            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-300 p-0.5 shadow-md shadow-amber-500/20">
+                <img src={logo} alt="Logo" className="w-full h-full object-contain rounded-lg bg-[#111318] p-1" />
+              </div>
+              <div>
+                <h1 className="font-bold text-white text-sm tracking-wide leading-tight font-display">
+                  SIRI SAMRUDDHI
+                </h1>
+                <p className="text-[10px] text-amber-400/90 font-semibold tracking-wider">
+                  Gold Palace Portal
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-bold text-white text-sm leading-tight">Sirisamruddhi</p>
-              <p className="text-xs" style={{ color: 'rgba(245,158,11,0.7)' }}>Gold Palace CRM</p>
+            
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Section Badge */}
+          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Showroom Operations
+            </span>
+            <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold uppercase tracking-wider border border-purple-500/30">
+              Portal
+            </span>
+          </div>
+
+          {/* Navigation Menu */}
+          <nav className="flex-1 px-3 py-1 space-y-1 overflow-y-auto custom-scrollbar">
+            <SidebarNavItem to="/dashboard" icon={<LayoutDashboard size={18} />} label="Dashboard" onClick={() => setIsMobileMenuOpen(false)} />
+            <SidebarNavItem to="/dashboard/leads" icon={<Users size={18} />} label="Employees" hasChevron onClick={() => setIsMobileMenuOpen(false)} />
+            <SidebarNavItem to="/dashboard/clients" icon={<Compass size={18} />} label="Outdoor Marketing" onClick={() => setIsMobileMenuOpen(false)} />
+            <SidebarNavItem to="/dashboard/tasks" icon={<FileText size={18} />} label="Daily Closing & Forms" onClick={() => setIsMobileMenuOpen(false)} />
+            <SidebarNavItem to="/dashboard/analytics" icon={<LineChart size={18} />} label="Customers" onClick={() => setIsMobileMenuOpen(false)} />
+            
+            {/* Communication & CRM Channels */}
+            <div className="pt-3 pb-1 px-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Direct Channels
+              </span>
+            </div>
+            <SidebarNavItem to="/dashboard/messaging" icon={<MessageSquare size={18} />} label="Live Chat" onClick={() => setIsMobileMenuOpen(false)} />
+            <SidebarNavItem to="/dashboard/whatsapp" icon={<Smartphone size={18} />} label="WhatsApp Broadcast" onClick={() => setIsMobileMenuOpen(false)} />
+            <SidebarNavItem to="/dashboard/email" icon={<Mail size={18} />} label="Email Campaigns" onClick={() => setIsMobileMenuOpen(false)} />
+            <SidebarNavItem 
+              to="/dashboard/meta" 
+              icon={
+                <div className="flex items-center">
+                  <Share2 size={14} />
+                  <Camera size={14} className="-ml-0.5" />
+                </div>
+              } 
+              label="Meta (FB & IG)" 
+              onClick={() => setIsMobileMenuOpen(false)} 
+            />
+          </nav>
+        </div>
+
+        {/* ── Bottom User Profile Card (Matching Image 2) ────────────────── */}
+        <div className="p-3 border-t border-[#1E2330]">
+          <div className="p-2.5 rounded-2xl bg-[#171A23] border border-[#242A3A] flex items-center justify-between">
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#6D28D9] to-[#8B5CF6] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                A
+              </div>
+              <div className="truncate">
+                <p className="font-bold text-white text-xs truncate">ADARSHA</p>
+                <div className="flex items-center text-[10px] text-slate-400 gap-1">
+                  <span>Mgr #109</span>
+                  <span>·</span>
+                  <NavLink to="/dashboard/settings" className="hover:text-purple-300">Settings</NavLink>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 shrink-0">
+              <NavLink 
+                to="/dashboard/settings"
+                title="Settings"
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-lg transition-colors"
+              >
+                <Settings size={15} />
+              </NavLink>
+              <button 
+                onClick={logout}
+                title="Sign Out"
+                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+              >
+                <LogOut size={15} />
+              </button>
             </div>
           </div>
-          <button 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="md:hidden p-1.5 rounded-lg transition-colors"
-            style={{ color: 'rgba(255,255,255,0.6)' }}
-          >
-            <X size={20} />
-          </button>
-        </div>
-        
-        {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-          {/* Main Section */}
-          <p className="text-xs font-bold px-3 pt-3 pb-2 uppercase tracking-widest" style={{ color: 'rgba(245,158,11,0.5)' }}>Main</p>
-          <NavItem to="/dashboard" icon={<LayoutDashboard size={18} />} label="Dashboard" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/dashboard/analytics" icon={<LineChart size={18} />} label="Analytics" onClick={() => setIsMobileMenuOpen(false)} />
-          
-          {/* CRM Section */}
-          <p className="text-xs font-bold px-3 pt-4 pb-2 uppercase tracking-widest" style={{ color: 'rgba(245,158,11,0.5)' }}>CRM</p>
-          <NavItem to="/dashboard/leads" icon={<Users size={18} />} label="Leads" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/dashboard/clients" icon={<UserCircle size={18} />} label="Clients & Deals" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/dashboard/tasks" icon={<CheckSquare size={18} />} label="Tasks" onClick={() => setIsMobileMenuOpen(false)} />
-
-          {/* Messaging Section */}
-          <p className="text-xs font-bold px-3 pt-4 pb-2 uppercase tracking-widest" style={{ color: 'rgba(245,158,11,0.5)' }}>Messaging</p>
-          <NavItem to="/dashboard/messaging" icon={<MessageSquare size={18} />} label="Live Chat" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/dashboard/whatsapp" icon={<Smartphone size={18} />} label="WhatsApp Broadcast" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/dashboard/email" icon={<Mail size={18} />} label="Email Campaigns" onClick={() => setIsMobileMenuOpen(false)} />
-
-          {/* Integrations Section */}
-          <p className="text-xs font-bold px-3 pt-4 pb-2 uppercase tracking-widest" style={{ color: 'rgba(245,158,11,0.5)' }}>Integrations</p>
-          <NavItem 
-            to="/dashboard/meta" 
-            icon={
-              <div className="flex items-center">
-                <Share2 size={14} />
-                <Camera size={14} className="-ml-0.5" />
-              </div>
-            } 
-            label="Meta (FB & IG)" 
-            onClick={() => setIsMobileMenuOpen(false)} 
-          />
-        </nav>
-
-        {/* Settings & Logout */}
-        <div className="p-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <NavItem to="/dashboard/settings" icon={<Settings size={18} />} label="Settings" onClick={() => setIsMobileMenuOpen(false)} />
-          <button 
-            onClick={logout}
-            className="flex items-center space-x-3 w-full p-3 rounded-xl transition-all group"
-            style={{ color: 'rgba(255,255,255,0.5)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#ffffff'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-          >
-            <LogOut size={18} />
-            <span className="font-medium text-sm">Logout</span>
-          </button>
-        </div>
-
-        {/* Version tag */}
-        <div className="px-5 pb-4">
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>v1.0.0 · Sirisamruddhi CRM</p>
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* ── Main Canvas Area ─────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Premium Header */}
-        <header className="h-16 bg-white flex items-center justify-between px-4 md:px-8 shrink-0" style={{ borderBottom: '1px solid #f0e8d8', boxShadow: '0 1px 12px rgba(128,0,0,0.04)' }}>
-          <div className="flex items-center space-x-3 truncate">
+        
+        {/* Top Header Bar (Matching Image 2) */}
+        <header className="h-16 bg-white border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-8 shrink-0 z-10 shadow-sm">
+          
+          {/* Left: Mobile Menu Trigger & Showroom Branch Badge */}
+          <div className="flex items-center space-x-3">
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
-              className="md:hidden p-2 -ml-2 rounded-lg transition-colors"
-              style={{ color: '#800000' }}
+              className="md:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
-            <div>
-              <h2 className="text-base font-bold truncate" style={{ color: '#1a1a1a' }}>{currentTitle}</h2>
-              <p className="text-xs hidden sm:block" style={{ color: '#9ca3af' }}>Sirisamruddhi Gold Palace</p>
+
+            {/* Showroom Branch Pill Badge (Matching Image 2) */}
+            <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111318] text-white text-xs border border-[#242A3A] shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-bold tracking-tight">Yelahanka Showroom Branch</span>
+              <span className="px-2 py-0.5 rounded-md bg-purple-600/30 border border-purple-400/40 text-purple-300 text-[9px] font-bold uppercase tracking-wider">
+                Showroom
+              </span>
             </div>
           </div>
-          <div className="flex items-center space-x-3 shrink-0">
-            {/* Admin Avatar */}
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white" style={{ background: 'linear-gradient(135deg, #800000, #F59E0B)' }}>
+
+          {/* Right: User Manager Badge + Logout Action */}
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2.5 px-3 py-1.5 rounded-2xl bg-[#F8FAFC] border border-slate-200">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#6D28D9] to-[#8B5CF6] text-white font-bold text-xs flex items-center justify-center shadow-sm">
                 A
               </div>
-              <div className="hidden sm:block">
-                <p className="text-xs font-bold" style={{ color: '#374151' }}>Admin</p>
-                <p className="text-xs" style={{ color: '#9ca3af' }}>Super User</p>
+              <div className="text-left hidden sm:block">
+                <p className="text-xs font-bold text-slate-900 leading-none">ADARSHA</p>
+                <p className="text-[10px] text-slate-500 leading-tight mt-0.5">Showroom Manager</p>
               </div>
             </div>
+
+            <button
+              onClick={logout}
+              title="Sign Out"
+              className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </header>
 
-        {/* Page Content */}
-        <div className="flex-1 overflow-auto p-4 md:p-8">
+        {/* Dynamic Page Outlet Container */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#F8F9FC]">
           <Outlet />
         </div>
       </main>
@@ -217,32 +265,49 @@ export const MainLayout = () => {
   );
 };
 
-// Premium dark sidebar nav item
-const NavItem = ({ to, icon, label, onClick }: { to: string; icon: React.ReactNode; label: string; onClick?: () => void }) => {
+// ── Sidebar Navigation Item (Active Purple Pill Container Matching Image 2) ──
+const SidebarNavItem = ({ 
+  to, 
+  icon, 
+  label, 
+  hasChevron, 
+  onClick 
+}: { 
+  to: string; 
+  icon: React.ReactNode; 
+  label: string; 
+  hasChevron?: boolean;
+  onClick?: () => void;
+}) => {
   return (
     <NavLink
       to={to}
       end={to === "/dashboard"}
       onClick={onClick}
       className={({ isActive }) =>
-        `flex items-center space-x-3 w-full px-3 py-2.5 rounded-xl transition-all text-sm font-medium ${
+        `flex items-center justify-between w-full px-3.5 py-2.5 rounded-2xl transition-all text-xs font-semibold ${
           isActive
-            ? 'text-white'
-            : 'hover:bg-white hover:bg-opacity-10'
+            ? 'bg-[#1E1538] border border-purple-500/40 text-purple-200 shadow-md shadow-purple-900/20 font-bold'
+            : 'text-slate-400 hover:text-white hover:bg-[#181B24]'
         }`
       }
-      style={({ isActive }) => isActive ? {
-        background: 'linear-gradient(90deg, rgba(245,158,11,0.25) 0%, rgba(245,158,11,0.08) 100%)',
-        borderLeft: '3px solid #F59E0B',
-        color: '#FFFFFF',
-        paddingLeft: '9px'
-      } : {
-        color: 'rgba(255,255,255,0.65)',
-        borderLeft: '3px solid transparent'
-      }}
     >
-      <div style={{ color: 'inherit' }}>{icon}</div>
-      <span>{label}</span>
+      {({ isActive }) => (
+        <>
+          <div className="flex items-center space-x-3">
+            <div className={isActive ? 'text-purple-400' : 'text-slate-400'}>
+              {icon}
+            </div>
+            <span>{label}</span>
+          </div>
+
+          {isActive ? (
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+          ) : hasChevron ? (
+            <ChevronRight size={14} className="text-slate-600" />
+          ) : null}
+        </>
+      )}
     </NavLink>
   );
 };

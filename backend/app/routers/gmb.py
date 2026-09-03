@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form, Depends, status
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
 from PIL import Image
 from dotenv import load_dotenv
 
@@ -17,12 +19,15 @@ from app.models.gmb import (
 from app.core.database import get_db_connection, hash_password
 from app.services.gmb_otp import GmbOtpService
 from app.services.gmb_service import GmbService
-from app.services.gmb_pdf import PHOTOS_DIR, PASSES_DIR
+from app.services.gmb_pdf import PHOTOS_DIR, PASSES_DIR, GmbPdfService
 
 load_dotenv()
 
 router = APIRouter()
+security = HTTPBearer(auto_error=False)
 
+SECRET_KEY = os.getenv("SECRET_KEY", "b1d4e5f7a0c9865c345a987d65f5a87b1c3a6b8c4d2e1f0")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 GMB_PUBLIC_BASE_URL = os.getenv("GMB_PUBLIC_BASE_URL", "http://localhost:5173")
 
 @router.get("/branches")
@@ -114,8 +119,8 @@ async def register(req: GmbRegistrationCreate, request: Request):
     Processes attendee registration, generates unique QR and PDF pass,
     and queues WhatsApp / Email notifications.
     """
-    # Use request origin or configured public host
-    base_url = GMB_PUBLIC_BASE_URL
+    # Use configured public host (ssgpcrm.cloud)
+    base_url = (os.getenv("GBM_PUBLIC_BASE_URL") or os.getenv("GMB_PUBLIC_BASE_URL") or "http://ssgpcrm.cloud").rstrip('/')
     try:
         res = await GmbService.register_attendee(req, base_url)
         return res
@@ -128,20 +133,43 @@ async def register(req: GmbRegistrationCreate, request: Request):
 @router.get("/pass/{token}")
 def download_pass_pdf(token: str):
     """
-    Streams the personalized event pass PDF for download or viewing.
+    Streams the personalized event pass PDF for direct download.
+    Regenerates on the fly if not yet cached on disk.
     """
     data = GmbService.get_pass_by_token(token)
-    if not data or not data.get("pdf_path"):
+    if not data:
         raise HTTPException(status_code=404, detail="Event pass not found.")
 
-    pdf_file = Path(data["pdf_path"])
+    pdf_file = Path(data["pdf_path"]) if data.get("pdf_path") else PASSES_DIR / f"pass_{data['qr_token']}.pdf"
     if not pdf_file.exists():
-        raise HTTPException(status_code=404, detail="PDF pass file not generated yet.")
+        try:
+            pdf_path_str = GmbPdfService.generate_event_pass_pdf(
+                qr_token=data["qr_token"],
+                name=data["name"],
+                designation=data["designation"],
+                employee_id=data["employee_id"],
+                branch_name=data["branch_name"],
+                company_name=data["company_name"],
+                gender=data.get("gender", "male"),
+                photo_filename=data.get("photo_url", ""),
+                public_base_url=GMB_PUBLIC_BASE_URL
+            )
+            pdf_file = Path(pdf_path_str)
+        except Exception as gen_err:
+            print(f"Error generating pass PDF on-the-fly: {gen_err}")
+            raise HTTPException(status_code=500, detail="Failed to generate pass PDF.")
+
+    emp_id = data.get('employee_id', 'Delegate').replace('/', '_').replace('\\', '_')
+    filename = f"GBM_Pass_{emp_id}.pdf"
 
     return FileResponse(
         path=str(pdf_file),
-        filename=f"SiriSamruddhi_Pass_{data['employee_id']}.pdf",
-        media_type="application/pdf"
+        filename=filename,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
     )
 
 @router.get("/pass-data/{token}")
@@ -179,10 +207,14 @@ def get_attendee_photo(filename: str):
     return FileResponse(str(path))
 
 @router.post("/pass/{token}/edit-status", response_model=GmbStatusOverrideResponse)
-def edit_pass_status(token: str, req: GmbStatusOverrideRequest):
+def edit_pass_status(
+    token: str, 
+    req: GmbStatusOverrideRequest,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+):
     """
     Allows staff/admin to directly edit entry or gift status from the pass view
-    after verifying staff username and password.
+    after verifying JWT bearer token OR staff username and password.
     """
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "siriadmin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "siriadmin1234")
@@ -190,15 +222,31 @@ def edit_pass_status(token: str, req: GmbStatusOverrideRequest):
     STAFF_PASSWORD = os.getenv("STAFF_PASSWORD", "staff1234")
 
     staff_name = "Staff"
-    staff_id = "staff_admin"
+    staff_id = "staff_user"
+    authenticated = False
 
-    if req.username and req.password:
+    # 1. Check Bearer JWT token from Authorization header if present
+    if credentials and credentials.credentials:
+        try:
+            payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+            username: str = payload.get("sub", "")
+            if username:
+                staff_name = payload.get("full_name", username)
+                staff_id = payload.get("staff_id", username)
+                authenticated = True
+        except JWTError:
+            pass
+
+    # 2. Check username & password in request body if not already authenticated via Bearer
+    if not authenticated and req.username and req.password:
         if req.username == ADMIN_USERNAME and req.password == ADMIN_PASSWORD:
             staff_name = "Chief Administrator"
             staff_id = "staff_admin"
+            authenticated = True
         elif req.username == STAFF_USERNAME and req.password == STAFF_PASSWORD:
             staff_name = "Authorized Event Staff"
             staff_id = "staff_env_user"
+            authenticated = True
         else:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -208,12 +256,16 @@ def edit_pass_status(token: str, req: GmbStatusOverrideRequest):
             """, (req.username,))
             db_staff = cursor.fetchone()
             conn.close()
-            if not db_staff or hash_password(req.password) != db_staff["password_hash"]:
-                raise HTTPException(status_code=401, detail="Invalid staff username or password")
-            staff_name = db_staff["full_name"]
-            staff_id = db_staff["id"]
-    else:
-        raise HTTPException(status_code=401, detail="Staff credentials (username and password) are required to edit status")
+            if db_staff and hash_password(req.password) == db_staff["password_hash"]:
+                staff_name = db_staff["full_name"]
+                staff_id = db_staff["id"]
+                authenticated = True
+
+    if not authenticated:
+        raise HTTPException(
+            status_code=401, 
+            detail="Staff credentials or active staff session required to edit status. Please verify staff permissions."
+        )
 
     try:
         res = GmbService.override_registration_status(
@@ -222,6 +274,11 @@ def edit_pass_status(token: str, req: GmbStatusOverrideRequest):
             entry_status=req.entry_status.value if req.entry_status else None,
             gift_status=req.gift_status.value if req.gift_status else None,
             gift_type_id=req.gift_type_id,
+            name=req.name,
+            designation=req.designation,
+            employee_id=req.employee_id,
+            gender=req.gender,
+            branch_id=req.branch_id,
             staff_id=staff_id,
             staff_name=staff_name,
             remark=req.remark or "Pass View Edit"

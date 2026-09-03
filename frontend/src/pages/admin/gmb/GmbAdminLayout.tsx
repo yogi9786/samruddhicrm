@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, QrCode, Gift, History, 
-  MessageSquare, Mail, Shield, LogOut, Menu, X, Building, ArrowLeft
+  MessageSquare, Mail, Shield, LogOut, Menu, X, Sparkles
 } from 'lucide-react';
-import logo from '../../../assets/logo.png';
 import { GmbAdminLogin } from './GmbAdminLogin';
 import { GmbDashboardView } from './GmbDashboardView';
 import { GmbRegistrationsView } from './GmbRegistrationsView';
@@ -16,7 +15,12 @@ import { GmbStaffView } from './GmbStaffView';
 
 export const GmbAdminLayout: React.FC = () => {
   const navigate = useNavigate();
-  const [token, setToken] = useState<string | null>(localStorage.getItem('gbm_staff_token') || localStorage.getItem('gmb_staff_token'));
+  
+  // Persistent session recovery from localStorage cache
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('gbm_staff_token') || localStorage.getItem('gmb_staff_token');
+  });
+
   const [staff, setStaff] = useState<any | null>(() => {
     try {
       const stored = localStorage.getItem('gbm_staff_profile') || localStorage.getItem('gmb_staff_profile');
@@ -26,16 +30,26 @@ export const GmbAdminLayout: React.FC = () => {
     }
   });
 
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    return localStorage.getItem('gbm_active_tab') || 'dashboard';
+  });
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Set default view based on staff role
+  // Set and cache active tab based on staff role & user selection
   useEffect(() => {
     if (staff) {
-      if (staff.role === 'GATE_STAFF') setActiveTab('entry-scanner');
-      else if (staff.role === 'GIFT_STAFF') setActiveTab('gift-scanner');
+      if (!localStorage.getItem('gbm_active_tab')) {
+        if (staff.role === 'GATE_STAFF') setActiveTab('entry-scanner');
+        else if (staff.role === 'GIFT_STAFF') setActiveTab('gift-scanner');
+      }
     }
   }, [staff]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    localStorage.setItem('gbm_active_tab', tabId);
+  };
 
   const handleLoginSuccess = (newToken: string, newStaff: any) => {
     localStorage.setItem('gbm_staff_token', newToken);
@@ -45,16 +59,19 @@ export const GmbAdminLayout: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('gbm_staff_token');
-    localStorage.removeItem('gbm_staff_profile');
-    localStorage.removeItem('gmb_staff_token');
-    localStorage.removeItem('gmb_staff_profile');
-    setToken(null);
-    setStaff(null);
+    if (window.confirm('Are you sure you want to sign out from the Admin Portal?')) {
+      localStorage.removeItem('gbm_staff_token');
+      localStorage.removeItem('gbm_staff_profile');
+      localStorage.removeItem('gmb_staff_token');
+      localStorage.removeItem('gmb_staff_profile');
+      localStorage.removeItem('gbm_active_tab');
+      setToken(null);
+      setStaff(null);
+    }
   };
 
   if (!token || !staff) {
-    return <GmbAdminLogin onLoginSuccess={handleLoginSuccess} onCancel={() => navigate('/')} />;
+    return <GmbAdminLogin onLoginSuccess={handleLoginSuccess} onCancel={() => {}} />;
   }
 
   const role = staff.role || 'GATE_STAFF';
@@ -74,97 +91,97 @@ export const GmbAdminLayout: React.FC = () => {
   const accessibleItems = menuItems.filter(item => item.roles.includes(role));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
-      {/* ── Sidebar (Desktop) ────────────────────────────────────────────── */}
-      <aside className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 p-5 shrink-0 justify-between">
-        <div className="space-y-6">
-          {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
-            <img 
-              src={logo} 
-              alt="Logo" 
-              className="h-10 w-10 rounded-full object-contain border border-amber-400/40" 
-            />
-            <div>
-              <h1 className="text-base font-bold text-white font-serif tracking-wide">
-                SIRISAMRUDDHI
-              </h1>
-              <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-amber-400">
-                GBM FORMS ADMIN
-              </p>
+    <div className="min-h-screen bg-[#F8F9FC] text-slate-800 flex flex-col md:flex-row font-sans selection:bg-purple-600 selection:text-white">
+      {/* ── Sidebar (Desktop - Clean Admin Safety Layout) ───────────────── */}
+      <aside className="hidden md:flex flex-col w-64 bg-[#111318] border-r border-[#1F2430] p-4 shrink-0 justify-between">
+        <div className="space-y-4">
+          
+          {/* Clean Admin Header (No store name/logo, no home page link) */}
+          <div className="p-3 border-b border-[#1E2330]">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300">
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <h1 className="font-bold text-white text-xs tracking-wider uppercase font-display">
+                  GBM ADMIN PORTAL
+                </h1>
+                <p className="text-[10px] text-purple-300/80 font-medium">
+                  Event Control Center
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Staff Info Pill */}
-          <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800">
-            <p className="text-xs font-bold text-white truncate">{staff.full_name || staff.username}</p>
-            <div className="flex items-center justify-between mt-1 text-[10px]">
-              <span className="text-slate-400 font-mono">@{staff.username}</span>
-              <span className={`px-2 py-0.5 rounded font-bold ${
-                role === 'ADMIN' ? 'bg-purple-500/20 text-purple-300' :
-                role === 'GATE_STAFF' ? 'bg-emerald-500/20 text-emerald-300' :
-                'bg-amber-500/20 text-amber-300'
-              }`}>
-                {role}
-              </span>
-            </div>
+          {/* Section Badge */}
+          <div className="px-2 pt-1 flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Operations Control
+            </span>
+            <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold uppercase tracking-wider border border-purple-500/30">
+              Active
+            </span>
           </div>
 
           {/* Navigation Menu */}
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 block mb-2">
-              GBM Event Operations
-            </span>
             {accessibleItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  onClick={() => handleTabChange(item.id)}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                      ? 'bg-[#1E1538] border border-purple-500/40 text-purple-200 shadow-md shadow-purple-900/20 font-bold'
+                      : 'text-slate-400 hover:text-white hover:bg-[#181B24]'
                   }`}
                 >
-                  <Icon size={16} />
-                  <span>{item.label}</span>
+                  <div className="flex items-center gap-3">
+                    <Icon size={16} className={isActive ? 'text-purple-400' : 'text-slate-400'} />
+                    <span>{item.label}</span>
+                  </div>
+                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Bottom Actions */}
-        <div className="pt-4 border-t border-slate-800 space-y-2">
-          <button
-            onClick={() => navigate('/')}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <ArrowLeft size={14} />
-            <span>Public Home</span>
-          </button>
+        {/* Bottom User Card & Secure Sign Out */}
+        <div className="pt-4 border-t border-[#1F2430]">
+          <div className="p-2.5 rounded-2xl bg-[#171A23] border border-[#242A3A] flex items-center justify-between">
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#6D28D9] to-[#8B5CF6] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                {staff.username ? staff.username.charAt(0).toUpperCase() : 'A'}
+              </div>
+              <div className="truncate">
+                <p className="font-bold text-white text-xs truncate">{staff.full_name || staff.username}</p>
+                <p className="text-[10px] text-purple-300 font-mono">{role}</p>
+              </div>
+            </div>
 
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition-colors font-medium"
-          >
-            <LogOut size={14} />
-            <span>Sign Out</span>
-          </button>
+            <button
+              onClick={handleLogout}
+              title="Sign Out"
+              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            >
+              <LogOut size={15} />
+            </button>
+          </div>
         </div>
       </aside>
 
-      {/* ── Mobile Top Header ────────────────────────────────────────────── */}
-      <div className="md:hidden flex justify-between items-center px-4 py-3.5 bg-slate-900 border-b border-slate-800">
+      {/* ── Mobile Top Header (No store name/logo) ───────────────────────── */}
+      <div className="md:hidden flex justify-between items-center px-4 py-3.5 bg-[#111318] border-b border-[#1F2430]">
         <div className="flex items-center space-x-2">
-          <img src={logo} alt="Logo" className="h-8 w-8 rounded-full border border-amber-400" />
-          <span className="text-sm font-bold text-white font-serif">GMB ADMIN</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse" />
+          <span className="text-sm font-bold text-white font-display">GBM ADMIN PORTAL</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">
             {role}
           </span>
           <button
@@ -178,34 +195,36 @@ export const GmbAdminLayout: React.FC = () => {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 space-y-1.5 animate-fadeIn">
+        <div className="md:hidden bg-[#111318] border-b border-[#1F2430] p-4 space-y-1.5 animate-fadeIn">
           {accessibleItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
-                onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold ${
+                onClick={() => { handleTabChange(item.id); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950'
+                    ? 'bg-[#1E1538] text-purple-200 border border-purple-500/30'
                     : 'text-slate-300 hover:bg-slate-800'
                 }`}
               >
-                <Icon size={16} />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-3">
+                  <Icon size={16} />
+                  <span>{item.label}</span>
+                </div>
+                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />}
               </button>
             );
           })}
-          <div className="pt-2 border-t border-slate-800 flex justify-between">
-            <button onClick={() => navigate('/')} className="text-xs text-slate-400">Public Home</button>
+          <div className="pt-3 border-t border-slate-800 flex justify-end">
             <button onClick={handleLogout} className="text-xs text-rose-400 font-bold">Sign Out</button>
           </div>
         </div>
       )}
 
       {/* ── Main Content Area ────────────────────────────────────────────── */}
-      <main className="flex-grow p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+      <main className="flex-grow p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full bg-[#F8F9FC]">
         {activeTab === 'dashboard' && <GmbDashboardView token={token} />}
         {activeTab === 'registrations' && <GmbRegistrationsView token={token} />}
         {activeTab === 'entry-scanner' && <GmbEntryScannerView token={token} />}

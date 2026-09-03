@@ -365,7 +365,7 @@ export const WhatsApp = () => {
           <form onSubmit={handleBroadcast} className="flex-grow flex flex-col gap-6">
             
             <div className="space-y-2 flex-grow flex flex-col">
-              <label className="block text-sm font-semibold text-gray-700 flex items-center space-x-2">
+              <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2">
                 <ListPlus size={16} className="text-brand-gold" />
                 <span>Recipient Numbers (One per line)</span>
               </label>
@@ -379,7 +379,7 @@ export const WhatsApp = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700 flex items-center space-x-2">
+              <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2">
                 <MessageSquare size={16} className="text-brand-gold" />
                 <span>Message Body</span>
               </label>

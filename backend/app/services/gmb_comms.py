@@ -35,17 +35,30 @@ class AiSensyService:
         payload_str = ""
 
         try:
-            if AISENSY_API_KEY:
+            api_key = os.getenv("AISENSY_API_KEY", "").strip()
+            campaign_name = (os.getenv("AISENSY_CAMPAIGN_NAME") or os.getenv("AISENSY_TEMPLATE_NAME") or "gbm-event").strip()
+            base_url = os.getenv("AISENSY_BASE_URL", "https://backend.aisensy.com").strip()
+
+            # Clean mobile number to 91XXXXXXXXXX
+            clean_digits = "".join([c for c in mobile if c.isdigit()])
+            if clean_digits.startswith("91") and len(clean_digits) == 12:
+                destination = clean_digits
+            elif len(clean_digits) == 10:
+                destination = f"91{clean_digits}"
+            else:
+                destination = clean_digits
+
+            if api_key:
                 async with httpx.AsyncClient(timeout=15.0) as client:
-                    endpoint = f"{AISENSY_BASE_URL.rstrip('/')}/campaign/t1/api/v2"
+                    endpoint = f"{base_url.rstrip('/')}/campaign/t1/api/v2"
                     headers = {
                         "Content-Type": "application/json",
-                        "Authorization": f"Bearer {AISENSY_API_KEY}"
+                        "Authorization": f"Bearer {api_key}"
                     }
                     body = {
-                        "apiKey": AISENSY_API_KEY,
-                        "campaignName": AISENSY_CAMPAIGN_NAME or "gmb_event_pass",
-                        "destination": f"91{mobile}",
+                        "apiKey": api_key,
+                        "campaignName": campaign_name,
+                        "destination": destination,
                         "userName": name,
                         "templateParams": [name, download_url],
                         "source": "gmb_registration_crm"
@@ -60,8 +73,8 @@ class AiSensyService:
             else:
                 # Mock / Development mode
                 status = "SENT"
-                payload_str = f"Mock WhatsApp message delivered to +91{mobile}: Hello {name}, your pass is ready at {download_url}"
-                print(f"[DEVELOPMENT WHATSAPP] To +91{mobile}: {download_url}")
+                payload_str = f"Mock WhatsApp message delivered to +{destination}: Hello {name}, your pass is ready at {download_url}"
+                print(f"[DEVELOPMENT WHATSAPP] To +{destination}: {download_url}")
         except Exception as e:
             status = "FAILED"
             error_msg = str(e)
