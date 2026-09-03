@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import confetti from 'canvas-confetti';
 import {
   Sparkles, CheckCircle2, AlertCircle, Camera, Upload, RefreshCw, 
   Download, ArrowRight, Shield, User, Building, Phone, Mail, 
