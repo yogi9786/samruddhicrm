@@ -4,6 +4,7 @@ import os
 import hashlib
 from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
 # Multi-path environment loader ensuring .env is found in all execution contexts
 def _ensure_env_loaded():
     _env_candidates = [
