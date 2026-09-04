@@ -188,11 +188,12 @@ def auto_migrate_databases():
 def get_db_connection():
     """
     Returns an active database connection.
-    If DB_ENGINE=postgresql, connects to PostgreSQL with automatic SQLite fallback on failure.
+    PostgreSQL is the PRIMARY database engine for all Admin, CRM, and Event operations.
+    Connects to PostgreSQL first, with automatic SQLite fallback if PostgreSQL is temporarily unreachable.
     """
     _ensure_env_loaded()
-    db_engine = os.getenv("DB_ENGINE", "").lower().strip()
-    if db_engine in ("postgresql", "postgres"):
+    db_engine = os.getenv("DB_ENGINE", "postgresql").lower().strip()
+    if db_engine != "sqlite":
         pg_conn = get_postgres_connection()
         if pg_conn:
             return PgConnectionWrapper(pg_conn)
