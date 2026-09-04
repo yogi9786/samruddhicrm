@@ -23,7 +23,20 @@ DIGINTRA_API_URL = "https://sms-login.digintra.com/api/v2/SendSMS"
 class GmbOtpService:
     @staticmethod
     def _get_config() -> dict:
-        load_dotenv()
+        # Load .env explicitly from backend directory or project root
+        candidates = [
+            Path(__file__).resolve().parents[2] / ".env",
+            Path(__file__).resolve().parents[3] / ".env",
+            Path.cwd() / ".env",
+            Path.cwd() / "backend" / ".env"
+        ]
+        for cp in candidates:
+            if cp.exists():
+                load_dotenv(dotenv_path=cp, override=True)
+                break
+        else:
+            load_dotenv(override=True)
+
         return {
             "client_id": os.getenv("DIGINTRA_CLIENT_ID", "").strip(),
             "api_key": os.getenv("DIGINTRA_API_KEY", "").strip(),
@@ -192,7 +205,9 @@ class GmbOtpService:
                 if clean_mobile not in TEST_NUMBERS and not clean_mobile.startswith("98765"):
                     return False, "", f"Failed to dispatch SMS OTP: {str(e)}", None
         else:
-            print("[Digintra SMS][WARN] Digintra API key is not configured; skipping live SMS dispatch.")
+            print("[Digintra SMS][ERROR] Digintra API key is missing in .env; live SMS cannot be dispatched.")
+            if clean_mobile not in TEST_NUMBERS and not clean_mobile.startswith("98765"):
+                return False, "", "SMS Gateway configuration error: DIGINTRA_API_KEY is not set in backend/.env", None
 
         demo_otp_dev = otp if (clean_mobile in TEST_NUMBERS or clean_mobile.startswith("98765")) else None
         return True, session_token, f"OTP sent successfully via SMS to +91 {clean_mobile}", demo_otp_dev
