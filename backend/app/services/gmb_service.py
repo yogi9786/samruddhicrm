@@ -513,7 +513,8 @@ class GmbService:
             SUM(CASE WHEN gift_status = 'CLAIMED' THEN 1 ELSE 0 END) as gifts_claimed,
             SUM(CASE WHEN gift_status != 'CLAIMED' THEN 1 ELSE 0 END) as gifts_pending,
             SUM(CASE WHEN gender = 'male' THEN 1 ELSE 0 END) as male_count,
-            SUM(CASE WHEN gender = 'female' THEN 1 ELSE 0 END) as female_count
+            SUM(CASE WHEN gender = 'female' THEN 1 ELSE 0 END) as female_count,
+            SUM(CASE WHEN gender = 'other' THEN 1 ELSE 0 END) as other_count
         FROM gmb_registrations
         """)
         reg_stats = cursor.fetchone()
@@ -562,6 +563,7 @@ class GmbService:
             "not_entered": reg_stats["not_entered"] or 0,
             "male_count": reg_stats["male_count"] or 0,
             "female_count": reg_stats["female_count"] or 0,
+            "other_count": reg_stats["other_count"] or 0,
             "gifts_claimed": reg_stats["gifts_claimed"] or 0,
             "gifts_pending": reg_stats["gifts_pending"] or 0,
             "branch_breakdown": branch_breakdown

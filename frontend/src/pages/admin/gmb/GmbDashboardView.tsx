@@ -240,6 +240,14 @@ export const GmbDashboardView: React.FC<GmbDashboardViewProps> = ({ token }) => 
               </div>
               <span className="text-base font-bold font-mono text-[#7E22CE] bg-white px-2.5 py-0.5 rounded-lg border border-[#D8B4FE]">{m.female_count || 0}</span>
             </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#E8F4EE] border border-[#C5E3D5] flex justify-between items-center">
+              <div>
+                <p className="text-xs font-bold text-[#065F46]">Other Delegates</p>
+                <p className="text-[10px] text-[#21845F]">Special Gift Set</p>
+              </div>
+              <span className="text-base font-bold font-mono text-[#21845F] bg-white px-2.5 py-0.5 rounded-lg border border-[#C5E3D5]">{m.other_count || 0}</span>
+            </div>
           </div>
         </div>
 
