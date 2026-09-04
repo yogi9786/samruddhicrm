@@ -53,6 +53,7 @@ class EmailStatus(str, Enum):
 
 class GmbOtpSendRequest(BaseModel):
     mobile: str = Field(..., description="10-digit mobile number, with or without +91")
+    employee_id: Optional[str] = Field(None, description="Compulsory Employee ID")
 
     @field_validator("mobile")
     @classmethod
@@ -63,6 +64,15 @@ class GmbOtpSendRequest(BaseModel):
         if len(clean) != 10:
             raise ValueError("Mobile number must be a valid 10-digit Indian phone number")
         return clean
+
+    @field_validator("employee_id")
+    @classmethod
+    def validate_employee_id(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            v = v.strip().upper()
+            if not v:
+                return None
+        return v
 
 class GmbOtpSendResponse(BaseModel):
     success: bool

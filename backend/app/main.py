@@ -8,12 +8,18 @@ from app.routers import (
     webhooks_whatsapp, webhooks_meta, auth, analytics, meta,
     whatsapp, email, crm, voice_agent, gmb, gmb_admin
 )
+from app.core.database import auto_migrate_databases
 
 app = FastAPI(
     title="Sirisamruddhi CRM & GBM Event Management API",
     description="Backend API for CRM and GBM Event Registration, Passes, QR Entry & Gift Management",
     version="2.0.0"
 )
+
+@app.on_event("startup")
+def on_startup():
+    auto_migrate_databases()
+
 
 # Configure CORS for frontend access
 origins = [

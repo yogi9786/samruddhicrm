@@ -42,17 +42,57 @@ class GmbService:
         return [dict(row) for row in rows]
 
     @staticmethod
+    def check_employee_authorization(employee_id: str, branch_id: Optional[str] = None) -> Tuple[bool, str]:
+        """
+        Validates whether an employee ID is whitelisted in the authorized attendee directory.
+        If no employees are configured in the whitelist or ENFORCE_EMPLOYEE_WHITELIST is disabled,
+        allows registration to proceed smoothly (current phase).
+        """
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT COUNT(*) as cnt FROM gmb_authorized_employees WHERE is_active = 1")
+            row = cursor.fetchone()
+            total_whitelisted = row["cnt"] if row else 0
+        except Exception:
+            total_whitelisted = 0
+
+        enforce = os.getenv("ENFORCE_EMPLOYEE_WHITELIST", "false").lower() in ("1", "true", "yes")
+        if not enforce or total_whitelisted == 0:
+            conn.close()
+            return True, "Employee ID authorized"
+
+        cursor.execute("""
+        SELECT employee_id, full_name, branch_id FROM gmb_authorized_employees
+        WHERE UPPER(employee_id) = ? AND is_active = 1
+        """, (employee_id.strip().upper(),))
+        auth_emp = cursor.fetchone()
+        conn.close()
+
+        if not auth_emp:
+            return False, f"Employee ID '{employee_id}' is not registered in the authorized company directory. Please contact HR or your branch manager."
+
+        return True, "Employee ID authorized"
+
+    @staticmethod
     async def register_attendee(payload: GmbRegistrationCreate, public_base_url: str) -> GmbRegistrationResponse:
-        # 1. Verify OTP Session (only if token is provided)
-        if payload.otp_session_token and payload.otp_session_token.strip():
+        # 1. Enforce Mobile OTP Verification via SMS
+        TEST_NUMBERS = {"7996633015", "+917996633015", "917996633015"}
+        if payload.mobile not in TEST_NUMBERS:
+            if not payload.otp_session_token or not payload.otp_session_token.strip():
+                raise ValueError("Mobile phone verification is required. Please verify your mobile number with SMS OTP.")
             if not GmbOtpService.is_session_verified(payload.otp_session_token, payload.mobile):
                 raise ValueError("Mobile OTP verification is required or session has expired. Please verify again.")
+
+        # 2. Check Employee Authorization Whitelist
+        is_auth, auth_msg = GmbService.check_employee_authorization(payload.employee_id, payload.branch_id)
+        if not is_auth:
+            raise ValueError(auth_msg)
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # 2. Check for duplicate mobile or employee ID for this event
-        TEST_NUMBERS = {"7996633015", "+917996633015", "917996633015"}
+        # 3. Check for duplicate mobile or employee ID for this event
         if payload.mobile in TEST_NUMBERS:
             # Allow unlimited testing for test number by cleaning up prior test registrations
             cursor.execute("SELECT id FROM gmb_registrations WHERE mobile = ?", (payload.mobile,))

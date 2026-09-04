@@ -112,7 +112,7 @@ export const GmbDashboardView: React.FC<GmbDashboardViewProps> = ({ token }) => 
             GBM Event Operations <span className="text-[#6D28D9]">Command Center</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Real-time delegate registration, gate check-in, and gift redemption metrics for Siri Samruddhi Gold Palace
+            Real-time delegate registration, gate check-in, and gift redemption operations
           </p>
         </div>
       </div>

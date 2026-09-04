@@ -43,7 +43,7 @@ def get_companies():
 @router.post("/otp/send", response_model=GmbOtpSendResponse)
 async def send_otp(req: GmbOtpSendRequest):
     """Sends SMS OTP via Digintra (with dev fallback)"""
-    success, token, msg, demo = await GmbOtpService.send_otp(req.mobile)
+    success, token, msg, demo = await GmbOtpService.send_otp(req.mobile, req.employee_id)
     if not success:
         raise HTTPException(status_code=400, detail=msg)
     return GmbOtpSendResponse(

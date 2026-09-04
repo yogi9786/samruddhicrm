@@ -41,37 +41,37 @@ export const GmbHistoryView: React.FC<GmbHistoryViewProps> = ({ token, defaultTa
   const items = activeTab === 'entry' ? entryLogs : giftLogs;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       {/* Header & Tabs */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white font-serif tracking-wide">
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
             {activeTab === 'entry' ? 'Gate Check-In History' : 'Gift Distribution History'}
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">
             Audit logs of all scanned attendees, checkpoints & staff verifications
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Tab Switcher */}
-          <div className="flex bg-slate-900 border border-slate-800 p-1 rounded-xl">
+          <div className="flex bg-slate-100 border border-slate-200 p-1 rounded-2xl shadow-xs">
             <button
               onClick={() => setActiveTab('entry')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'entry'
-                  ? 'bg-amber-500 text-slate-950 shadow-md'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Gate Scans
             </button>
             <button
               onClick={() => setActiveTab('gift')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'gift'
-                  ? 'bg-amber-500 text-slate-950 shadow-md'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Gift Redemptions
@@ -80,79 +80,82 @@ export const GmbHistoryView: React.FC<GmbHistoryViewProps> = ({ token, defaultTa
 
           <button
             onClick={fetchHistory}
-            className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs"
+            className="p-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs shadow-xs transition-colors"
           >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={14} className={loading ? 'animate-spin text-purple-600' : ''} />
           </button>
         </div>
       </div>
 
       {/* History Table */}
-      <div className="rounded-2xl bg-slate-900/90 border border-slate-800 overflow-hidden">
+      <div className="rounded-3xl bg-white border border-slate-200/90 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800 text-[10px]">
+          <table className="w-full text-left text-xs text-slate-700">
+            <thead className="bg-[#F8FAFC] text-slate-700 uppercase tracking-wider font-bold border-b border-slate-200 text-[11px]">
               <tr>
-                <th className="px-4 py-3.5">Attendee</th>
-                <th className="px-4 py-3.5">Emp ID</th>
-                <th className="px-4 py-3.5">Branch</th>
-                <th className="px-4 py-3.5">{activeTab === 'entry' ? 'Gate Point' : 'Gift Type & Counter'}</th>
-                <th className="px-4 py-3.5">Verified By Staff</th>
-                <th className="px-4 py-3.5">Timestamp</th>
-                <th className="px-4 py-3.5 text-right">Result</th>
+                <th className="px-4 py-4">Attendee</th>
+                <th className="px-4 py-4">Emp ID</th>
+                <th className="px-4 py-4">Branch</th>
+                <th className="px-4 py-4">{activeTab === 'entry' ? 'Gate Point' : 'Gift Type & Counter'}</th>
+                <th className="px-4 py-4">Verified By Staff</th>
+                <th className="px-4 py-4">Timestamp</th>
+                <th className="px-4 py-4 text-right">Result</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                    <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                    Loading audit trail...
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                    <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <span className="font-medium text-xs">Loading audit trail...</span>
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                    No scan records found in history.
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                    <p className="font-semibold text-sm text-slate-700">No scan records found in history</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Scanned checkpoints will appear here in real-time.</p>
                   </td>
                 </tr>
               ) : (
                 items.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={item.id} className="hover:bg-purple-50/30 transition-colors">
                     {/* Attendee */}
-                    <td className="px-4 py-3.5 font-semibold text-white">
+                    <td className="px-4 py-3.5 font-bold text-slate-900">
                       {item.attendee_name || 'Delegate'}
                     </td>
 
                     {/* Emp ID */}
-                    <td className="px-4 py-3.5 font-mono font-bold text-amber-400">
-                      {item.employee_id}
+                    <td className="px-4 py-3.5">
+                      <span className="font-mono font-bold text-purple-800 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-lg text-xs">
+                        {item.employee_id}
+                      </span>
                     </td>
 
                     {/* Branch */}
-                    <td className="px-4 py-3.5 text-slate-300">
+                    <td className="px-4 py-3.5 text-slate-800 font-semibold">
                       {item.branch_name}
                     </td>
 
                     {/* Gate or Gift Detail */}
-                    <td className="px-4 py-3.5 font-medium text-slate-200">
+                    <td className="px-4 py-3.5 font-medium text-slate-700">
                       {activeTab === 'entry' ? (
                         <span>{item.gate_name || 'Main Gate'}</span>
                       ) : (
                         <div>
-                          <p className="text-amber-300">{item.gift_name}</p>
+                          <p className="text-purple-800 font-bold">{item.gift_name}</p>
                           <p className="text-[10px] text-slate-500">{item.counter_name}</p>
                         </div>
                       )}
                     </td>
 
                     {/* Staff */}
-                    <td className="px-4 py-3.5 text-slate-300">
+                    <td className="px-4 py-3.5 text-slate-700">
                       {item.staff_name || item.staff_id || 'Staff'}
                     </td>
 
                     {/* Timestamp */}
-                    <td className="px-4 py-3.5 text-slate-400 font-mono text-[11px]">
+                    <td className="px-4 py-3.5 text-slate-500 font-mono text-xs">
                       {item.scanned_at || item.redeemed_at ? (
                         new Date(item.scanned_at || item.redeemed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
                       ) : '-'}
@@ -160,7 +163,7 @@ export const GmbHistoryView: React.FC<GmbHistoryViewProps> = ({ token, defaultTa
 
                     {/* Status */}
                     <td className="px-4 py-3.5 text-right">
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold shadow-xs">
                         ✓ SUCCESS
                       </span>
                     </td>

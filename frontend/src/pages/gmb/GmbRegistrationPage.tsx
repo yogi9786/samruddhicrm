@@ -4,7 +4,8 @@ import {
   Sparkles, CheckCircle2, AlertCircle, Camera, Upload, RefreshCw,
   Download, ArrowRight, Shield, User, Building, Phone, Mail,
   CreditCard, Briefcase, Eye, ChevronRight, Check, X, AlertTriangle,
-  ChevronDown, Search, Ticket, Gift
+  ChevronDown, Search, Ticket, Gift, Lock, KeyRound, MessageSquare,
+  Send, Smartphone, Clock, CheckCircle
 } from 'lucide-react';
 import { getApiBaseUrl } from '../../utils/api';
 
@@ -84,6 +85,15 @@ export const GmbRegistrationPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [aadhaar, setAadhaar] = useState('');
 
+  // SMS OTP Verification State
+  const [otpSessionToken, setOtpSessionToken] = useState<string>('');
+  const [otpStatus, setOtpStatus] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'verified'>('idle');
+  const [otpCode, setOtpCode] = useState<string>('');
+  const [otpCountdown, setOtpCountdown] = useState<number>(0);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpSuccessMsg, setOtpSuccessMsg] = useState<string | null>(null);
+  const otpInputRef = useRef<HTMLInputElement | null>(null);
+
   // Field errors & touched states
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
@@ -142,6 +152,126 @@ export const GmbRegistrationPage: React.FC = () => {
       stopCamera();
     };
   }, []);
+
+  // OTP Resend Countdown Timer
+  useEffect(() => {
+    let interval: any = null;
+    if (otpCountdown > 0) {
+      interval = setInterval(() => {
+        setOtpCountdown(prev => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [otpCountdown]);
+
+  // Send / Resend SMS OTP Handler
+  const handleSendOtp = async (isResend = false) => {
+    // 1. Enforce Employee ID first before mobile verification
+    if (!employeeId.trim()) {
+      setErrors(prev => ({ ...prev, employeeId: 'Employee ID is compulsory. Please enter your Employee ID before verifying mobile number.' }));
+      if (empRef.current) {
+        empRef.current.focus();
+        empRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    const cleanMobile = mobile.replace(/\D/g, '');
+    if (cleanMobile.length !== 10) {
+      setErrors(prev => ({ ...prev, mobile: 'Please enter a valid 10-digit mobile number before requesting OTP.' }));
+      if (mobileRef.current) mobileRef.current.focus();
+      return;
+    }
+
+    setOtpError(null);
+    setOtpSuccessMsg(null);
+    setOtpStatus('sending');
+
+    try {
+      const res = await fetch(`${API_URL}/gmb/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          mobile: cleanMobile,
+          employee_id: employeeId.trim().toUpperCase()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || 'Failed to dispatch SMS OTP. Please try again.');
+      }
+
+      setOtpSessionToken(data.session_token);
+      setOtpStatus('sent');
+      setOtpCountdown(45);
+      setOtpSuccessMsg(data.message || `OTP sent successfully via SMS to +91 ${cleanMobile}`);
+      setTimeout(() => {
+        if (otpInputRef.current) otpInputRef.current.focus();
+      }, 200);
+    } catch (err: any) {
+      setOtpStatus(otpSessionToken ? 'sent' : 'idle');
+      setOtpError(err.message || 'Could not send SMS OTP. Please try again.');
+    }
+  };
+
+  // Verify SMS OTP Handler
+  const handleVerifyOtp = async () => {
+    const cleanMobile = mobile.replace(/\D/g, '');
+    const cleanCode = otpCode.replace(/\D/g, '');
+
+    if (!cleanCode || cleanCode.length < 4) {
+      setOtpError('Please enter the verification code received on your mobile');
+      return;
+    }
+
+    if (!otpSessionToken) {
+      setOtpError('Please request an OTP first');
+      setOtpStatus('idle');
+      return;
+    }
+
+    setOtpError(null);
+    setOtpStatus('verifying');
+
+    try {
+      const res = await fetch(`${API_URL}/gmb/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mobile: cleanMobile,
+          otp: cleanCode,
+          session_token: otpSessionToken
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || 'Invalid verification code');
+      }
+
+      setOtpStatus('verified');
+      setOtpSuccessMsg('Mobile number verified successfully! ✓');
+      setErrors(prev => ({ ...prev, mobile: undefined }));
+    } catch (err: any) {
+      setOtpStatus('sent');
+      setOtpError(err.message || 'Incorrect OTP code. Please enter the valid code.');
+    }
+  };
+
+  // Reset OTP state if user wants to change mobile number
+  const handleResetOtp = () => {
+    setOtpStatus('idle');
+    setOtpSessionToken('');
+    setOtpCode('');
+    setOtpError(null);
+    setOtpSuccessMsg(null);
+    setTimeout(() => {
+      if (mobileRef.current) mobileRef.current.focus();
+    }, 100);
+  };
 
   // Trigger celebration confetti upon successful registration (pure native zero-dependency)
   useEffect(() => {
@@ -303,27 +433,34 @@ export const GmbRegistrationPage: React.FC = () => {
   const validateForm = (): { isValid: boolean; newErrors: ValidationErrors } => {
     const newErrors: ValidationErrors = {};
 
+    // 1. Employee ID is compulsory (Step 2 First Field)
+    if (!employeeId.trim()) {
+      newErrors.employeeId = 'Employee ID is compulsory (e.g. EMP1025)';
+    }
+
+    // 2. Full Name (Step 2 Second Field)
     if (!name.trim()) {
       newErrors.name = 'Full Name is required (minimum 2 characters)';
     } else if (name.trim().length < 2) {
       newErrors.name = 'Full Name must be at least 2 characters';
     }
 
+    // 3. Designation (Step 2 Third Field)
     if (!designation.trim()) {
       newErrors.designation = 'Designation is required (e.g. Sales Executive, Manager)';
     }
 
-    if (!employeeId.trim()) {
-      newErrors.employeeId = 'Employee ID is required (e.g. EMP1025)';
-    }
-
+    // 4. Mobile & OTP (Step 3 First Field)
     const cleanMobile = mobile.replace(/\D/g, '');
     if (!cleanMobile) {
       newErrors.mobile = 'Mobile number is required (10 digits)';
     } else if (cleanMobile.length !== 10) {
       newErrors.mobile = `Mobile number must be exactly 10 digits (currently ${cleanMobile.length} digits)`;
+    } else if (otpStatus !== 'verified' || !otpSessionToken) {
+      newErrors.mobile = 'Please verify your mobile number with SMS OTP before submitting';
     }
 
+    // 5. Aadhaar (Step 3 Second Field)
     const cleanAadhaar = aadhaar.replace(/\D/g, '');
     if (!cleanAadhaar) {
       newErrors.aadhaar = 'Aadhaar Number is required (12 digits)';
@@ -331,6 +468,7 @@ export const GmbRegistrationPage: React.FC = () => {
       newErrors.aadhaar = `Aadhaar Number must be exactly 12 digits (currently ${cleanAadhaar.length} digits)`;
     }
 
+    // 6. Email (Step 3 Third Field - Optional)
     if (email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email.trim())) {
@@ -338,6 +476,7 @@ export const GmbRegistrationPage: React.FC = () => {
       }
     }
 
+    // 7. Photo (Step 4)
     if (!photoFilename && !photoPreview) {
       newErrors.photo = 'Delegate Selfie/Photo is required. Please take a selfie or upload a photo.';
     }
@@ -358,16 +497,16 @@ export const GmbRegistrationPage: React.FC = () => {
     setErrors(newErrors);
 
     if (!isValid) {
-      // Scroll to error summary or first invalid input
-      if (newErrors.name && nameRef.current) {
+      // Scroll to error summary or first invalid input in top-to-bottom order
+      if (newErrors.employeeId && empRef.current) {
+        empRef.current.focus();
+        empRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (newErrors.name && nameRef.current) {
         nameRef.current.focus();
         nameRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else if (newErrors.designation && desigRef.current) {
         desigRef.current.focus();
         desigRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else if (newErrors.employeeId && empRef.current) {
-        empRef.current.focus();
-        empRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else if (newErrors.mobile && mobileRef.current) {
         mobileRef.current.focus();
         mobileRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -397,7 +536,7 @@ export const GmbRegistrationPage: React.FC = () => {
         name: name.trim(),
         designation: designation.trim(),
         mobile: cleanMobile,
-        otp_session_token: "",
+        otp_session_token: otpSessionToken,
         email: email.trim() || undefined,
         aadhaar_number: cleanAadhaar,
         employee_id: employeeId.trim().toUpperCase(),
@@ -495,7 +634,7 @@ export const GmbRegistrationPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Scannable QR Code Box (Matching User Request) */}
+            {/* Scannable QR Code Box */}
             <div className="py-3 px-2 rounded-2xl bg-[#FAF5FF] border border-purple-200/80 text-center my-2">
               <div className="bg-white p-3 rounded-2xl inline-block shadow-sm border border-purple-100">
                 <img
@@ -561,9 +700,10 @@ export const GmbRegistrationPage: React.FC = () => {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // MAIN REGISTRATION FORM (ADMIN DESIGN SYSTEM • CLEAN & EXECUTIVE)
+  // MAIN REGISTRATION FORM (STEP-BY-STEP PROGRESSIVE FLOW)
   // ═══════════════════════════════════════════════════════════════════════════
   const errorCount = Object.keys(errors).filter(k => (errors as any)[k]).length;
+  const isEmployeeIdFilled = Boolean(employeeId.trim());
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] text-slate-800 flex flex-col justify-center items-center p-4 sm:p-6 font-sans relative overflow-hidden selection:bg-purple-600 selection:text-white">
@@ -590,7 +730,7 @@ export const GmbRegistrationPage: React.FC = () => {
               GBM Event Registration
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Enter your delegate credentials to generate your event pass
+              Please complete the step-by-step verification below to receive your official delegate pass
             </p>
           </div>
 
@@ -599,12 +739,12 @@ export const GmbRegistrationPage: React.FC = () => {
             <div ref={errorSummaryRef} className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 animate-fadeIn text-xs">
               <div className="flex items-center gap-2 font-bold text-sm mb-1.5 text-rose-800">
                 <AlertCircle size={16} className="text-rose-600 shrink-0" />
-                <span>Please fix {errorCount} required {errorCount === 1 ? 'field' : 'fields'}:</span>
+                <span>Please complete {errorCount} required {errorCount === 1 ? 'field' : 'fields'}:</span>
               </div>
               <ul className="list-disc list-inside space-y-1 text-rose-700 font-medium pl-1">
+                {errors.employeeId && <li>{errors.employeeId}</li>}
                 {errors.name && <li>{errors.name}</li>}
                 {errors.designation && <li>{errors.designation}</li>}
-                {errors.employeeId && <li>{errors.employeeId}</li>}
                 {errors.mobile && <li>{errors.mobile}</li>}
                 {errors.aadhaar && <li>{errors.aadhaar}</li>}
                 {errors.email && <li>{errors.email}</li>}
@@ -625,11 +765,16 @@ export const GmbRegistrationPage: React.FC = () => {
             
             {/* ── Step 1: Showroom Branch Selection ── */}
             <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-3">
-              <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
-                  1
+              <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
+                    1
+                  </span>
+                  <span>Select Showroom Branch</span>
+                </div>
+                <span className="text-[11px] text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                  Step 1 of 4
                 </span>
-                <span>Select Showroom Branch</span>
               </label>
 
               {/* Branch Dropdown Select */}
@@ -669,16 +814,62 @@ export const GmbRegistrationPage: React.FC = () => {
               })()}
             </div>
 
-            {/* ── Step 2: Delegate Credentials & Personal Info ─────────────── */}
+            {/* ── Step 2: Employee Credentials & Personal Details ───────────── */}
             <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-4">
-              <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
-                  2
+              <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
+                    2
+                  </span>
+                  <span>Delegate Credentials & Employee Info</span>
+                </div>
+                <span className="text-[11px] text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                  Step 2 of 4
                 </span>
-                <span>Delegate Credentials & Information</span>
               </label>
 
-              {/* Full Name */}
+              {/* Field 1 (Compulsory First): Employee ID */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-50/80 via-indigo-50/40 to-white border-2 border-purple-200/90 shadow-sm">
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-bold text-purple-950 flex items-center gap-1.5">
+                    <CreditCard size={15} className="text-purple-700" />
+                    <span>Employee ID</span>
+                    <span className="text-rose-500 font-bold">*</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-purple-700 bg-purple-100/90 border border-purple-300/80 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Compulsory First
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    ref={empRef}
+                    type="text"
+                    value={employeeId}
+                    onChange={(e) => {
+                      const val = e.target.value.toUpperCase();
+                      setEmployeeId(val);
+                      if (errors.employeeId) setErrors(prev => ({ ...prev, employeeId: undefined }));
+                    }}
+                    placeholder="e.g. EMP1025"
+                    className={`w-full px-4 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm font-mono font-bold tracking-wider focus:outline-none transition-all shadow-sm ${
+                      errors.employeeId 
+                        ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
+                        : 'border-purple-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200'
+                    }`}
+                  />
+                </div>
+                {errors.employeeId ? (
+                  <p className="text-xs text-rose-600 mt-1.5 flex items-center gap-1 font-medium">
+                    <AlertTriangle size={12} /> {errors.employeeId}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-slate-500 mt-1.5">
+                    Required to authorize your pass and unlock phone number verification below.
+                  </p>
+                )}
+              </div>
+
+              {/* Field 2: Full Name */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Full Name <span className="text-rose-500">*</span>
@@ -710,72 +901,39 @@ export const GmbRegistrationPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Designation & Employee ID */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Designation <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
-                      <Briefcase size={18} />
-                    </div>
-                    <input
-                      ref={desigRef}
-                      type="text"
-                      value={designation}
-                      onChange={(e) => {
-                        setDesignation(e.target.value);
-                        if (errors.designation) setErrors(prev => ({ ...prev, designation: undefined }));
-                      }}
-                      placeholder="e.g. Showroom Manager"
-                      className={`w-full pl-11 pr-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none transition-all shadow-sm ${
-                        errors.designation 
-                          ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
-                          : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
-                      }`}
-                    />
+              {/* Field 3: Designation */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Designation / Role <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
+                    <Briefcase size={18} />
                   </div>
-                  {errors.designation && (
-                    <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
-                      <AlertTriangle size={12} /> {errors.designation}
-                    </p>
-                  )}
+                  <input
+                    ref={desigRef}
+                    type="text"
+                    value={designation}
+                    onChange={(e) => {
+                      setDesignation(e.target.value);
+                      if (errors.designation) setErrors(prev => ({ ...prev, designation: undefined }));
+                    }}
+                    placeholder="e.g. Showroom Manager, Sales Executive"
+                    className={`w-full pl-11 pr-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none transition-all shadow-sm ${
+                      errors.designation 
+                        ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
+                        : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
+                    }`}
+                  />
                 </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Employee ID <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
-                      <CreditCard size={18} />
-                    </div>
-                    <input
-                      ref={empRef}
-                      type="text"
-                      value={employeeId}
-                      onChange={(e) => {
-                        setEmployeeId(e.target.value.toUpperCase());
-                        if (errors.employeeId) setErrors(prev => ({ ...prev, employeeId: undefined }));
-                      }}
-                      placeholder="e.g. EMP1025"
-                      className={`w-full pl-11 pr-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm font-mono focus:outline-none transition-all shadow-sm ${
-                        errors.employeeId 
-                          ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
-                          : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
-                      }`}
-                    />
-                  </div>
-                  {errors.employeeId && (
-                    <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
-                      <AlertTriangle size={12} /> {errors.employeeId}
-                    </p>
-                  )}
-                </div>
+                {errors.designation && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertTriangle size={12} /> {errors.designation}
+                  </p>
+                )}
               </div>
 
-              {/* Gender Selection */}
+              {/* Field 4: Gender Selection */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Gender (Delegate Gift Category) <span className="text-rose-500">*</span>
@@ -814,50 +972,229 @@ export const GmbRegistrationPage: React.FC = () => {
               </div>
             </div>
 
-            {/* ── Step 3: Contact & Verification ──────────────────────────── */}
+            {/* ── Step 3: Identity & Contact Verification (SMS OTP) ───────── */}
             <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-4">
-              <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
-                  3
+              <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
+                    3
+                  </span>
+                  <span>Contact & SMS OTP Security Verification</span>
+                </div>
+                <span className="text-[11px] text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                  Step 3 of 4
                 </span>
-                <span>Contact & Security Verification</span>
               </label>
 
-              {/* Mobile Number */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Mobile Number (10 Digits) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-purple-700 text-xs font-bold">
-                    +91
-                  </span>
-                  <input
-                    ref={mobileRef}
-                    type="tel"
-                    inputMode="tel"
-                    maxLength={10}
-                    value={mobile}
-                    onChange={(e) => {
-                      setMobile(e.target.value.replace(/\D/g, ''));
-                      if (errors.mobile) setErrors(prev => ({ ...prev, mobile: undefined }));
-                    }}
-                    placeholder="9876543210"
-                    className={`w-full pl-12 pr-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm font-mono focus:outline-none transition-all shadow-sm ${
-                      errors.mobile 
-                        ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
-                        : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
-                    }`}
-                  />
+              {/* Mobile Number & SMS OTP Verification */}
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-center">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Mobile Number (10 Digits) <span className="text-rose-500">*</span>
+                  </label>
+                  {otpStatus === 'verified' ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      <CheckCircle size={12} className="text-emerald-600" />
+                      <span>Verified ✓</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-purple-700 font-semibold">
+                      SMS OTP Required
+                    </span>
+                  )}
                 </div>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-purple-700 text-xs font-bold">
+                      +91
+                    </span>
+                    <input
+                      ref={mobileRef}
+                      type="tel"
+                      inputMode="tel"
+                      maxLength={10}
+                      disabled={otpStatus === 'verified'}
+                      value={mobile}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setMobile(val);
+                        if (otpStatus !== 'idle') {
+                          setOtpStatus('idle');
+                          setOtpSessionToken('');
+                          setOtpCode('');
+                          setOtpError(null);
+                          setOtpSuccessMsg(null);
+                        }
+                        if (errors.mobile) setErrors(prev => ({ ...prev, mobile: undefined }));
+                      }}
+                      placeholder="9876543210"
+                      className={`w-full pl-12 pr-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm font-mono focus:outline-none transition-all shadow-sm ${
+                        otpStatus === 'verified'
+                          ? 'border-emerald-400 bg-emerald-50/40 text-emerald-950 font-bold'
+                          : errors.mobile 
+                            ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
+                            : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
+                      }`}
+                    />
+                  </div>
+
+                  {/* Send / Verify Button or Change Button */}
+                  {otpStatus === 'verified' ? (
+                    <button
+                      type="button"
+                      onClick={handleResetOtp}
+                      className="px-4 py-2.5 rounded-2xl border border-slate-300 hover:border-slate-400 bg-white text-slate-700 hover:text-slate-900 text-xs font-bold transition-all shrink-0 shadow-sm"
+                    >
+                      Change Number
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={mobile.replace(/\D/g, '').length !== 10 || otpStatus === 'sending'}
+                      onClick={() => handleSendOtp(false)}
+                      className={`px-4 py-3 rounded-2xl text-xs font-bold transition-all shrink-0 shadow-sm flex items-center justify-center gap-1.5 ${
+                        mobile.replace(/\D/g, '').length === 10 && otpStatus !== 'sending'
+                          ? 'bg-purple-700 hover:bg-purple-800 text-white shadow-purple-600/20 active:scale-[0.98]'
+                          : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                      }`}
+                    >
+                      {otpStatus === 'sending' ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                          <span>Sending SMS...</span>
+                        </>
+                      ) : otpStatus === 'sent' ? (
+                        <>
+                          <RefreshCw size={13} />
+                          <span>Resend OTP</span>
+                        </>
+                      ) : (
+                        <>
+                          <Smartphone size={14} />
+                          <span>Verify Mobile</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Error / Verified / Helper message for Mobile Input */}
                 {errors.mobile ? (
                   <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertTriangle size={12} /> {errors.mobile}
                   </p>
+                ) : otpStatus === 'verified' ? (
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                      <span>Mobile number verified: <strong>+91 {mobile}</strong></span>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                      SMS Verified ✓
+                    </span>
+                  </div>
                 ) : (
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Your QR pass & updates will be sent directly to this WhatsApp number.
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    Your QR pass & event updates will be sent to this verified mobile number.
                   </p>
+                )}
+
+                {/* Inline OTP Verification Panel */}
+                {(otpStatus === 'sent' || otpStatus === 'verifying') && (
+                  <div className="p-4 sm:p-5 rounded-2xl bg-purple-50/80 border-2 border-purple-200 space-y-3 animate-fadeIn shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-purple-950 font-bold text-xs sm:text-sm">
+                        <KeyRound size={16} className="text-purple-700" />
+                        <span>Enter 6-Digit SMS OTP</span>
+                      </div>
+                      <span className="text-[11px] text-slate-500">
+                        Sent to <strong>+91 {mobile}</strong>
+                      </span>
+                    </div>
+
+                    {/* OTP Input and Verify Action */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        ref={otpInputRef}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        value={otpCode}
+                        onChange={(e) => {
+                          setOtpCode(e.target.value.replace(/\D/g, ''));
+                          if (otpError) setOtpError(null);
+                        }}
+                        placeholder="••••••"
+                        className="w-full sm:flex-1 py-2.5 px-4 bg-white border border-purple-300 rounded-xl text-center text-lg font-mono font-bold tracking-[0.35em] text-purple-950 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all shadow-inner"
+                      />
+                      <button
+                        type="button"
+                        disabled={otpCode.length < 4 || otpStatus === 'verifying'}
+                        onClick={handleVerifyOtp}
+                        className={`py-2.5 px-6 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 ${
+                          otpCode.length >= 4 && otpStatus !== 'verifying'
+                            ? 'bg-gradient-to-r from-[#6D28D9] to-[#7C3AED] hover:from-[#581C87] hover:to-[#6D28D9] text-white shadow-purple-600/30 active:scale-[0.98]'
+                            : 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed'
+                        }`}
+                      >
+                        {otpStatus === 'verifying' ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Verifying...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Confirm & Verify</span>
+                            <Check size={16} />
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Resend Timer & Actions */}
+                    <div className="flex items-center justify-between text-xs pt-1">
+                      {otpCountdown > 0 ? (
+                        <span className="text-slate-500 flex items-center gap-1 font-medium">
+                          <Clock size={13} className="text-purple-600" />
+                          <span>Resend OTP in <strong>{otpCountdown}s</strong></span>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSendOtp(true)}
+                          className="text-purple-700 hover:text-purple-900 font-bold underline flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <RefreshCw size={12} />
+                          <span>Resend SMS OTP</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleResetOtp}
+                        className="text-slate-500 hover:text-slate-800 text-[11px] underline"
+                      >
+                        Change number
+                      </button>
+                    </div>
+
+                    {/* Inline OTP Error Display */}
+                    {otpError && (
+                      <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-1.5 font-medium animate-fadeIn">
+                        <AlertTriangle size={14} className="shrink-0" />
+                        <span>{otpError}</span>
+                      </div>
+                    )}
+
+                    {/* Inline OTP Success Display */}
+                    {otpSuccessMsg && !otpError && (
+                      <p className="text-[11px] text-purple-700 flex items-center gap-1 font-medium">
+                        <Sparkles size={12} className="text-purple-600 shrink-0" />
+                        <span>{otpSuccessMsg}</span>
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -902,7 +1239,7 @@ export const GmbRegistrationPage: React.FC = () => {
               {/* Email (Optional) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Email Address <span className="text-slate-400 font-normal">(Optional — for PDF copy)</span>
+                  Email Address <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
