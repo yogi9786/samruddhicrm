@@ -73,11 +73,11 @@ async def send():
             print(f"Response Body: {resp.text}")
             res_json = resp.json()
             if res_json.get("ErrorCode") == 0:
-                print("\n✅ SUCCESS: Digintra accepted the SMS! Check your phone & Digintra portal.")
+                print("\n[OK] SUCCESS: Digintra accepted the SMS! Check your phone & Digintra portal.")
             else:
-                print(f"\n⚠️ DIGINTRA REJECTED: ErrorCode={res_json.get('ErrorCode')}, Desc={res_json.get('ErrorDescription')}")
+                print(f"\n[FAILED] DIGINTRA REJECTED: ErrorCode={res_json.get('ErrorCode')}, Desc={res_json.get('ErrorDescription')}")
         except Exception as e:
-            print(f"\n❌ Network / Dispatch Exception: {e}")
+            print(f"\n[ERROR] Network / Dispatch Exception: {e}")
 
 asyncio.run(send())
 print("=" * 60)
