@@ -1,7 +1,6 @@
 import os
 import sqlite3
 import psycopg2
-from psycopg2.extras import RealDictCursor
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -96,17 +95,98 @@ def migrate_all():
             cols_str = ", ".join([f'"{col}"' for col in col_names])
             placeholders = ", ".join(["%s" for _ in col_names])
             
-            # Use ON CONFLICT DO NOTHING to avoid duplicate key errors
-            insert_sql = f'INSERT INTO "{table}" ({cols_str}) VALUES ({placeholders}) ON CONFLICT DO NOTHING'
-
             row_count = 0
+
             for row in rows:
                 values = [row[col] for col in col_names]
-                pg_cur.execute(insert_sql, values)
-                row_count += 1
+                pg_cur.execute("SAVEPOINT row_sp")
+                try:
+                    if table == "gmb_registrations":
+                        reg_id = row["id"]
+                        mobile = row["mobile"]
+                        emp_id = row["employee_id"]
+                        event_id = row["event_id"]
+
+                        # If conflicting old registration exists under a different ID with the same mobile or emp_id, clean it up first
+                        pg_cur.execute(
+                            'DELETE FROM "gmb_registrations" WHERE "id" != %s AND "event_id" = %s AND ("mobile" = %s OR "employee_id" = %s)',
+                            (reg_id, event_id, mobile, emp_id)
+                        )
+
+                        # Delete any existing row with same primary key id so we can insert the updated row
+                        pg_cur.execute('DELETE FROM "gmb_registrations" WHERE "id" = %s', (reg_id,))
+
+                        insert_sql = f'INSERT INTO "{table}" ({cols_str}) VALUES ({placeholders})'
+                        pg_cur.execute(insert_sql, values)
+
+                    elif table == "gmb_event_passes":
+                        pass_id = row["id"]
+                        reg_id = row["registration_id"]
+                        qr_token = row["qr_token"]
+
+                        # Check if parent registration exists in PostgreSQL
+                        pg_cur.execute('SELECT 1 FROM "gmb_registrations" WHERE "id" = %s', (reg_id,))
+                        if not pg_cur.fetchone():
+                            # Skip pass if registration not present
+                            pg_cur.execute("RELEASE SAVEPOINT row_sp")
+                            continue
+
+                        # Clean up any conflicting passes with same qr_token or reg_id
+                        pg_cur.execute(
+                            'DELETE FROM "gmb_event_passes" WHERE "id" != %s AND ("registration_id" = %s OR "qr_token" = %s)',
+                            (pass_id, reg_id, qr_token)
+                        )
+                        pg_cur.execute('DELETE FROM "gmb_event_passes" WHERE "id" = %s', (pass_id,))
+
+                        insert_sql = f'INSERT INTO "{table}" ({cols_str}) VALUES ({placeholders})'
+                        pg_cur.execute(insert_sql, values)
+
+                    elif table == "gmb_entry_scans":
+                        pass_id = row["pass_id"]
+                        reg_id = row["registration_id"]
+                        # Verify parents
+                        pg_cur.execute('SELECT 1 FROM "gmb_event_passes" WHERE "id" = %s', (pass_id,))
+                        if not pg_cur.fetchone():
+                            pg_cur.execute("RELEASE SAVEPOINT row_sp")
+                            continue
+
+                        insert_sql = f'INSERT INTO "{table}" ({cols_str}) VALUES ({placeholders}) ON CONFLICT ("id") DO NOTHING'
+                        pg_cur.execute(insert_sql, values)
+
+                    elif table == "gmb_gift_redemptions":
+                        pass_id = row["pass_id"]
+                        # Verify parents
+                        pg_cur.execute('SELECT 1 FROM "gmb_event_passes" WHERE "id" = %s', (pass_id,))
+                        if not pg_cur.fetchone():
+                            pg_cur.execute("RELEASE SAVEPOINT row_sp")
+                            continue
+
+                        insert_sql = f'INSERT INTO "{table}" ({cols_str}) VALUES ({placeholders}) ON CONFLICT ("id") DO NOTHING'
+                        pg_cur.execute(insert_sql, values)
+
+                    elif table in ("gmb_whatsapp_logs", "gmb_email_logs"):
+                        reg_id = row["registration_id"]
+                        pg_cur.execute('SELECT 1 FROM "gmb_registrations" WHERE "id" = %s', (reg_id,))
+                        if not pg_cur.fetchone():
+                            pg_cur.execute("RELEASE SAVEPOINT row_sp")
+                            continue
+
+                        insert_sql = f'INSERT INTO "{table}" ({cols_str}) VALUES ({placeholders}) ON CONFLICT ("id") DO NOTHING'
+                        pg_cur.execute(insert_sql, values)
+
+                    else:
+                        insert_sql = f'INSERT INTO "{table}" ({cols_str}) VALUES ({placeholders}) ON CONFLICT DO NOTHING'
+                        pg_cur.execute(insert_sql, values)
+
+                    pg_cur.execute("RELEASE SAVEPOINT row_sp")
+                    row_count += 1
+
+                except Exception as row_err:
+                    pg_cur.execute("ROLLBACK TO SAVEPOINT row_sp")
+                    # continue silently on duplicate constraint
 
             pg_conn.commit()
-            print(f"  ✓ Table '{table}': Migrated/Checked {row_count} rows.")
+            print(f"  ✓ Table '{table}': Migrated/Synced {row_count} rows.")
             total_migrated += row_count
 
         except Exception as table_err:
