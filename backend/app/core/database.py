@@ -4,9 +4,24 @@ import os
 import hashlib
 from pathlib import Path
 from datetime import datetime
-from dotenv import load_dotenv
+# Multi-path environment loader ensuring .env is found in all execution contexts
+def _ensure_env_loaded():
+    _env_candidates = [
+        Path(__file__).resolve().parents[2] / ".env",
+        Path(__file__).resolve().parents[1] / ".env",
+        Path("/var/www/samruddhicrm/backend/.env"),
+        Path("/var/www/samruddhicrm/.env"),
+        Path.cwd() / ".env",
+        Path.cwd() / "backend" / ".env"
+    ]
+    for p in _env_candidates:
+        if p.exists():
+            load_dotenv(dotenv_path=p, override=True)
+            break
+    else:
+        load_dotenv(override=True)
 
-load_dotenv()
+_ensure_env_loaded()
 
 # Database file location in backend directory
 DB_PATH = Path(__file__).resolve().parents[2] / "sirisamruddhi_crm.db"
@@ -113,6 +128,7 @@ class PgConnectionWrapper:
 
 def get_postgres_connection():
     """Attempts to connect to PostgreSQL using DATABASE_URL or individual POSTGRES_* params"""
+    _ensure_env_loaded()
     try:
         import psycopg2
         from psycopg2.extras import RealDictCursor
@@ -121,17 +137,22 @@ def get_postgres_connection():
         if db_url:
             conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
         else:
+            host = os.getenv("POSTGRES_HOST", "127.0.0.1")
+            port = int(os.getenv("POSTGRES_PORT", 5432))
+            dbname = os.getenv("POSTGRES_DB", "sirisamruddhi_crm")
+            user = os.getenv("POSTGRES_USER", "sirisamruddhi_admin")
+            password = os.getenv("POSTGRES_PASSWORD", "SiriGold@Secure2026!$#AdminDb")
             conn = psycopg2.connect(
-                host=os.getenv("POSTGRES_HOST", "localhost"),
-                port=int(os.getenv("POSTGRES_PORT", 5432)),
-                dbname=os.getenv("POSTGRES_DB", "sirisamruddhi_crm"),
-                user=os.getenv("POSTGRES_USER", "sirisamruddhi_admin"),
-                password=os.getenv("POSTGRES_PASSWORD", "SiriGold@Secure2026!$#AdminDb"),
+                host=host,
+                port=port,
+                dbname=dbname,
+                user=user,
+                password=password,
                 cursor_factory=RealDictCursor
             )
         return conn
     except Exception as e:
-        # Graceful fallback to SQLite
+        print(f"[!] PostgreSQL connection notice: {e}")
         return None
 
 def auto_migrate_databases():
@@ -155,7 +176,6 @@ def auto_migrate_databases():
                 with open(sql_file, "r", encoding="utf-8") as f:
                     content = f.read()
                 cur = pg_conn.cursor()
-                # Run create table statements safely
                 cur.execute(content)
                 pg_conn.commit()
                 print("[+] Auto-Migrator: PostgreSQL database verified & synchronized successfully.")
@@ -169,6 +189,7 @@ def get_db_connection():
     Returns an active database connection.
     If DB_ENGINE=postgresql, connects to PostgreSQL with automatic SQLite fallback on failure.
     """
+    _ensure_env_loaded()
     db_engine = os.getenv("DB_ENGINE", "").lower().strip()
     if db_engine in ("postgresql", "postgres"):
         pg_conn = get_postgres_connection()
