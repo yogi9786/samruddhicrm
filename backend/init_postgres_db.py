@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
+DB_HOST = os.getenv("POSTGRES_HOST", "127.0.0.1")
 DB_PORT = int(os.getenv("POSTGRES_PORT", 5432))
 DB_NAME = os.getenv("POSTGRES_DB", "sirisamruddhi_crm")
 DB_USER = os.getenv("POSTGRES_USER", "sirisamruddhi_admin")

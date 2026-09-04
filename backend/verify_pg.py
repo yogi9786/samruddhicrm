@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-host = os.getenv("POSTGRES_HOST", "localhost")
+host = os.getenv("POSTGRES_HOST", "127.0.0.1")
 port = int(os.getenv("POSTGRES_PORT", 5432))
 dbname = os.getenv("POSTGRES_DB", "sirisamruddhi_crm")
 user = os.getenv("POSTGRES_USER", "sirisamruddhi_admin")
