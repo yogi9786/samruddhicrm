@@ -67,7 +67,6 @@ class GmbOtpService:
         if len(clean_mobile) != 10:
             return False, "", "Please enter a valid 10-digit Indian mobile number", None
 
-        TEST_NUMBERS = {"7996633015", "+917996633015", "917996633015"}
         clean_emp = employee_id.strip().upper() if employee_id else None
 
         conn = get_db_connection()
@@ -75,34 +74,32 @@ class GmbOtpService:
         now = datetime.now(timezone.utc)
 
         # 1. Pre-check: Check if mobile is already registered for this event
-        if clean_mobile not in TEST_NUMBERS:
-            cursor.execute(
-                "SELECT id, name FROM gmb_registrations WHERE mobile = ? AND event_id = 'evt_gbm2026' LIMIT 1",
-                (clean_mobile,)
-            )
-            reg_mob = cursor.fetchone()
-            if reg_mob:
-                conn.close()
-                return False, "", f"Mobile number +91 {clean_mobile} is already registered for this event ({reg_mob['name']}).", None
+        cursor.execute(
+            "SELECT id, name FROM gmb_registrations WHERE mobile = ? AND event_id = 'evt_gbm2026' LIMIT 1",
+            (clean_mobile,)
+        )
+        reg_mob = cursor.fetchone()
+        if reg_mob:
+            conn.close()
+            return False, "", f"Mobile number +91 {clean_mobile} is already registered for this event ({reg_mob['name']}).", None
 
-            # 2. Pre-check: Check if Employee ID is already registered
-            if clean_emp:
-                cursor.execute(
-                    "SELECT id, name FROM gmb_registrations WHERE UPPER(employee_id) = ? AND event_id = 'evt_gbm2026' LIMIT 1",
-                    (clean_emp,)
-                )
-                reg_emp = cursor.fetchone()
-                if reg_emp:
-                    conn.close()
-                    return False, "", f"Employee ID '{clean_emp}' is already registered for this event ({reg_emp['name']}).", None
+        # 2. Pre-check: Check if Employee ID is already registered
+        if clean_emp:
+            cursor.execute(
+                "SELECT id, name FROM gmb_registrations WHERE UPPER(employee_id) = ? AND event_id = 'evt_gbm2026' LIMIT 1",
+                (clean_emp,)
+            )
+            reg_emp = cursor.fetchone()
+            if reg_emp:
+                conn.close()
+                return False, "", f"Employee ID '{clean_emp}' is already registered for this event ({reg_emp['name']}).", None
 
         # 3. Rate limiter: 30-second cooldown & max 5 requests per 15 mins
-        if clean_mobile not in TEST_NUMBERS:
-            cursor.execute("""
-            SELECT created_at FROM gmb_otp_challenges
-            WHERE mobile = ? AND is_verified = 0
-            ORDER BY created_at DESC LIMIT 1
-            """, (clean_mobile,))
+        cursor.execute("""
+        SELECT created_at FROM gmb_otp_challenges
+        WHERE mobile = ? AND is_verified = 0
+        ORDER BY created_at DESC LIMIT 1
+        """, (clean_mobile,))
             last = cursor.fetchone()
             if last and last["created_at"]:
                 try:
