@@ -56,23 +56,38 @@ export const GmbAdminLogin: React.FC<GmbAdminLoginProps> = ({ onLoginSuccess, on
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC] text-slate-800 flex flex-col justify-center items-center p-4 sm:p-6 font-sans selection:bg-purple-600 selection:text-white">
-      <div className="w-full max-w-md">
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 md:p-10 shadow-xl shadow-slate-200/50">
+    <div className="min-h-screen bg-gradient-to-br from-[#FAF5FF] via-[#F8FAFC] to-[#EFF6FF] text-slate-800 flex flex-col justify-center items-center p-4 sm:p-6 font-sans relative overflow-hidden selection:bg-purple-600 selection:text-white">
+      {/* ── Ambient Background Glows & Geometric Elements ──────────────── */}
+      <div className="absolute top-[-10%] left-[-5%] w-[450px] h-[450px] rounded-full bg-gradient-to-br from-[#7E22CE]/15 to-[#3B0764]/5 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-5%] w-[480px] h-[480px] rounded-full bg-gradient-to-tl from-[#21845F]/15 to-[#526F91]/10 blur-3xl pointer-events-none" />
+      <div className="absolute top-[35%] right-[10%] w-[280px] h-[280px] rounded-full bg-[#FAF1EC]/80 blur-2xl pointer-events-none" />
+      
+      {/* Subtle Dot Grid Overlay */}
+      <div 
+        className="absolute inset-0 opacity-[0.35] pointer-events-none" 
+        style={{
+          backgroundImage: 'radial-gradient(#C6D4E3 1px, transparent 1px)',
+          backgroundSize: '24px 24px'
+        }}
+      />
+
+      <div className="w-full max-w-md relative z-10 animate-scaleUp">
+        {/* Form Container with Glassmorphism & Refined Border */}
+        <div className="bg-white/95 backdrop-blur-xl border border-[#D8B4FE]/70 rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl shadow-purple-900/10 relative">
           
           {/* Top Pill Badge */}
           <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100/70 border border-purple-300/80 text-purple-800 text-xs font-bold uppercase tracking-wider shadow-sm">
-              <Sparkles size={14} className="text-purple-600" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F3E8FF] border border-[#D8B4FE] text-[#7E22CE] text-xs font-bold uppercase tracking-wider shadow-xs">
+              <Sparkles size={14} className="text-[#7E22CE]" />
               <span>GBM EVENT 2026 ADMIN PORTAL</span>
             </div>
           </div>
 
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#3B0764] tracking-tight font-display">
               Staff & Admin Access
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-[#526F91] mt-1 font-medium">
               Enter your authorized event manager credentials
             </p>
           </div>
@@ -92,7 +107,7 @@ export const GmbAdminLogin: React.FC<GmbAdminLoginProps> = ({ onLoginSuccess, on
                 Staff / Manager Username <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7E22CE]">
                   <User size={18} />
                 </div>
                 <input
@@ -101,7 +116,7 @@ export const GmbAdminLogin: React.FC<GmbAdminLoginProps> = ({ onLoginSuccess, on
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter staff username"
-                  className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all font-medium"
+                  className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:bg-white focus:border-[#7E22CE] focus:ring-2 focus:ring-[#F3E8FF] transition-all font-medium"
                 />
               </div>
             </div>
@@ -112,7 +127,7 @@ export const GmbAdminLogin: React.FC<GmbAdminLoginProps> = ({ onLoginSuccess, on
                 Password <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7E22CE]">
                   <Lock size={18} />
                 </div>
                 <input
@@ -121,7 +136,7 @@ export const GmbAdminLogin: React.FC<GmbAdminLoginProps> = ({ onLoginSuccess, on
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-11 py-3 bg-[#F8FAFC] border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all"
+                  className="w-full pl-11 pr-11 py-3 bg-[#F8FAFC] border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:bg-white focus:border-[#7E22CE] focus:ring-2 focus:ring-[#F3E8FF] transition-all"
                 />
                 <button
                   type="button"
@@ -140,7 +155,7 @@ export const GmbAdminLogin: React.FC<GmbAdminLoginProps> = ({ onLoginSuccess, on
                   type="checkbox"
                   checked={rememberSession}
                   onChange={(e) => setRememberSession(e.target.checked)}
-                  className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-slate-300"
+                  className="w-4 h-4 rounded text-[#7E22CE] focus:ring-[#7E22CE] border-slate-300"
                 />
                 <span className="text-xs font-semibold text-slate-700">Keep session active (Cached)</span>
               </label>
@@ -151,7 +166,7 @@ export const GmbAdminLogin: React.FC<GmbAdminLoginProps> = ({ onLoginSuccess, on
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 px-6 bg-gradient-to-r from-[#581C87] via-[#6D28D9] to-[#7C3AED] hover:from-[#4C1D95] hover:to-[#6D28D9] text-white font-bold rounded-2xl shadow-xl shadow-purple-600/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 text-sm sm:text-base"
+                className="w-full py-4 px-6 bg-gradient-to-r from-[#3B0764] via-[#7E22CE] to-[#9333EA] hover:from-[#3B0764] hover:to-[#7E22CE] text-white font-bold rounded-2xl shadow-xl shadow-purple-900/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 text-sm sm:text-base"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">

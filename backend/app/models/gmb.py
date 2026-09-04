@@ -6,6 +6,7 @@ import re
 class Gender(str, Enum):
     MALE = "male"
     FEMALE = "female"
+    OTHER = "other"
 
 class EntryStatus(str, Enum):
     NOT_ENTERED = "NOT_ENTERED"

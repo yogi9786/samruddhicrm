@@ -41,7 +41,7 @@ export const GmbRegistrationsView: React.FC<GmbRegistrationsViewProps> = ({ toke
     mobile: '',
     email: '',
     branch_id: '',
-    gender: 'male' as 'male' | 'female',
+    gender: 'male' as 'male' | 'female' | 'other',
     entry_status: 'NOT_ENTERED' as 'NOT_ENTERED' | 'ENTERED',
     gift_status: 'PENDING' as 'PENDING' | 'CLAIMED'
   });
@@ -124,7 +124,7 @@ export const GmbRegistrationsView: React.FC<GmbRegistrationsViewProps> = ({ toke
       mobile: item.mobile || '',
       email: item.email || '',
       branch_id: item.branch_id || (item.branch_name === 'Kolar' ? 'branch_kolar' : item.branch_name === 'Udupi' ? 'branch_udupi' : 'branch_yelahanka'),
-      gender: (item.gender || 'male').toLowerCase() as 'male' | 'female',
+      gender: (item.gender || 'male').toLowerCase() as 'male' | 'female' | 'other',
       entry_status: item.entry_status || 'NOT_ENTERED',
       gift_status: item.gift_status || 'PENDING'
     });
@@ -434,10 +434,10 @@ export const GmbRegistrationsView: React.FC<GmbRegistrationsViewProps> = ({ toke
                     <td className="px-4 py-3.5 text-center">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
                         item.entry_status === 'ENTERED'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs'
-                          : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          ? 'bg-[#E8F4EE] text-[#21845F] border border-[#C5E3D5] shadow-xs'
+                          : 'bg-rose-50 text-rose-700 border border-rose-200 shadow-xs'
                       }`}>
-                        {item.entry_status === 'ENTERED' ? '✓ Entered' : 'Not Entered'}
+                        {item.entry_status === 'ENTERED' ? '✓ Entered' : '● Not Entered'}
                       </span>
                     </td>
 
@@ -445,10 +445,10 @@ export const GmbRegistrationsView: React.FC<GmbRegistrationsViewProps> = ({ toke
                     <td className="px-4 py-3.5 text-center">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
                         item.gift_status === 'CLAIMED'
-                          ? 'bg-purple-50 text-purple-800 border border-purple-200 shadow-xs'
-                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          ? 'bg-[#E8F4EE] text-[#21845F] border border-[#C5E3D5] shadow-xs'
+                          : 'bg-rose-50 text-rose-700 border border-rose-200 shadow-xs'
                       }`}>
-                        {item.gift_status === 'CLAIMED' ? '✓ Claimed' : 'Pending'}
+                        {item.gift_status === 'CLAIMED' ? '✓ Claimed' : '● Not Done'}
                       </span>
                     </td>
 
@@ -877,15 +877,16 @@ export const GmbRegistrationsView: React.FC<GmbRegistrationsViewProps> = ({ toke
                 {/* Gender */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                    Gender (Gift Type) <span className="text-rose-500">*</span>
+                    Gender <span className="text-rose-500">*</span>
                   </label>
                   <select
                     value={editForm.gender}
                     onChange={(e) => setEditForm(f => ({ ...f, gender: e.target.value as any }))}
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-2xl text-slate-900 font-semibold focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 cursor-pointer"
                   >
-                    <option value="male">Male (Executive Watch Set)</option>
-                    <option value="female">Female (Pure Silk Saree Box)</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
 

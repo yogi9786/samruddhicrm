@@ -300,15 +300,42 @@ export const GmbEntryScannerView: React.FC<GmbEntryScannerViewProps> = ({ token 
               <span>WARNING: ATTENDEE ALREADY CHECKED IN</span>
             </div>
           ) : (
-            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold text-center flex items-center justify-center gap-2">
+            <div className="p-3.5 rounded-2xl bg-[#E8F4EE] border border-[#C5E3D5] text-[#21845F] text-xs font-bold text-center flex items-center justify-center gap-2">
               <CheckCircle2 size={16} />
               <span>VALID PASS • READY FOR CHECK-IN</span>
             </div>
           )}
 
+          {/* Real-Time Live Status Badges */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Gate Entry Status */}
+            <div className={`p-3 rounded-2xl border flex items-center justify-between text-xs font-medium transition-all ${
+              scannedResult.entry_status === 'ENTERED'
+                ? 'bg-[#E8F4EE] border-[#C5E3D5] text-[#21845F]'
+                : 'bg-rose-50 border-rose-200 text-rose-700'
+            }`}>
+              <span className="font-bold text-[11px] uppercase tracking-wider">Gate Entry:</span>
+              <span className="font-bold px-2 py-0.5 rounded-md bg-white/80 border border-current/20 text-xs">
+                {scannedResult.entry_status === 'ENTERED' ? '✓ Done' : '● Not Done'}
+              </span>
+            </div>
+
+            {/* Gift Status */}
+            <div className={`p-3 rounded-2xl border flex items-center justify-between text-xs font-medium transition-all ${
+              scannedResult.gift_status === 'CLAIMED'
+                ? 'bg-[#E8F4EE] border-[#C5E3D5] text-[#21845F]'
+                : 'bg-rose-50 border-rose-200 text-rose-700'
+            }`}>
+              <span className="font-bold text-[11px] uppercase tracking-wider">Gift Status:</span>
+              <span className="font-bold px-2 py-0.5 rounded-md bg-white/80 border border-current/20 text-xs">
+                {scannedResult.gift_status === 'CLAIMED' ? '✓ Received' : '● Not Done'}
+              </span>
+            </div>
+          </div>
+
           {/* Attendee Profile Card */}
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F8FAFC] border border-slate-200/70">
-            <div className="w-20 h-24 rounded-2xl bg-white border border-purple-200 overflow-hidden shrink-0 shadow-sm">
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#EDF2F8] border border-[#C6D4E3]">
+            <div className="w-20 h-24 rounded-2xl bg-white border border-[#D8B4FE] overflow-hidden shrink-0 shadow-sm">
               {scannedResult.photo_url ? (
                 <img
                   src={`${API_URL}/gmb/photos/${scannedResult.photo_url}`}
@@ -324,13 +351,13 @@ export const GmbEntryScannerView: React.FC<GmbEntryScannerViewProps> = ({ token 
               <h3 className="text-lg font-bold truncate text-slate-900 font-display">
                 {scannedResult.name}
               </h3>
-              <p className="text-xs text-slate-600 font-medium">{scannedResult.designation}</p>
-              <p className="text-xs font-mono font-bold text-purple-800">
-                <span className="bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md">
+              <p className="text-xs text-[#526F91] font-medium">{scannedResult.designation}</p>
+              <p className="text-xs font-mono font-bold text-[#7E22CE]">
+                <span className="bg-[#F3E8FF] border border-[#D8B4FE] px-2 py-0.5 rounded-md">
                   ID: {scannedResult.employee_id}
                 </span>
               </p>
-              <p className="text-xs text-slate-700 font-semibold">{scannedResult.branch_name} Branch • <span className="capitalize text-purple-700">{scannedResult.gender}</span></p>
+              <p className="text-xs text-slate-700 font-semibold">{scannedResult.branch_name} Branch • <span className="capitalize text-[#7E22CE] font-bold">{scannedResult.gender}</span></p>
               <p className="text-[11px] text-slate-500 font-mono">Aadhaar: {scannedResult.masked_aadhaar}</p>
             </div>
           </div>

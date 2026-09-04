@@ -80,7 +80,7 @@ export const GmbRegistrationPage: React.FC = () => {
   const [name, setName] = useState('');
   const [designation, setDesignation] = useState('');
   const [employeeId, setEmployeeId] = useState('');
-  const [gender, setGender] = useState<'male' | 'female'>('male');
+  const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
   const [aadhaar, setAadhaar] = useState('');
@@ -592,82 +592,94 @@ export const GmbRegistrationPage: React.FC = () => {
   // ═══════════════════════════════════════════════════════════════════════════
   if (registrationResult) {
     return (
-      <div className="min-h-screen bg-[#F0F2F5] text-slate-800 flex flex-col justify-center items-center p-4 sm:p-6 font-sans relative overflow-hidden selection:bg-purple-600 selection:text-white">
-        {/* Background Decorative Ambient Glows matching Admin Layout */}
-        <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-purple-900/10 via-purple-600/5 to-transparent pointer-events-none" />
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[360px] bg-gradient-to-tr from-purple-500/15 to-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="min-h-screen bg-gradient-to-br from-[#F1F5F9] via-[#E2E8F0] to-[#EEF2F6] text-slate-800 flex flex-col justify-center items-center p-3 sm:p-6 md:p-8 font-sans relative overflow-hidden selection:bg-slate-900 selection:text-white">
+        {/* Multi-Tone Ambient Architectural Background Glows */}
+        <div className="absolute top-[-10%] left-[-8%] w-[560px] h-[560px] rounded-full bg-gradient-to-br from-[#7E22CE]/15 via-slate-400/10 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute top-[-5%] right-[-8%] w-[500px] h-[500px] rounded-full bg-gradient-to-bl from-[#526F91]/15 via-slate-400/10 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-8%] w-[540px] h-[540px] rounded-full bg-gradient-to-tl from-[#21845F]/15 via-slate-400/10 to-transparent blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 w-full max-w-lg bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-purple-950/5 text-center animate-fadeIn my-6">
+        {/* Modern Dot Matrix Grid Texture */}
+        <div 
+          className="absolute inset-0 opacity-[0.35] pointer-events-none" 
+          style={{
+            backgroundImage: 'radial-gradient(#64748B 1.2px, transparent 1.2px)',
+            backgroundSize: '24px 24px'
+          }}
+        />
+
+        <div className="relative z-10 w-full max-w-lg bg-[#F8FAFC]/95 backdrop-blur-2xl border-2 border-slate-300 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] text-center animate-fadeIn my-4 sm:my-6 overflow-hidden">
+          {/* Card Top Decorative Multi-Color Gradient Bar */}
+          <div className="absolute top-0 inset-x-0 h-1.5 sm:h-2 bg-gradient-to-r from-[#7E22CE] via-[#526F91] to-[#21845F]" />
+
           {/* Success Icon */}
-          <div className="w-16 h-16 bg-purple-50 border-2 border-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-700 shadow-lg shadow-purple-500/10">
-            <CheckCircle2 size={36} />
+          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#E8F4EE] border-2 border-[#21845F] rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 text-[#21845F] shadow-lg shadow-[#21845F]/15 mt-1 sm:mt-2">
+            <CheckCircle2 size={32} className="sm:w-9 sm:h-9" />
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-display">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-black tracking-tight font-display">
             Registration Confirmed!
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 mt-2">
-            Thank you, <strong className="text-purple-700">{registrationResult.name}</strong>. Your official delegate pass has been generated.
+          <p className="text-xs sm:text-sm text-slate-600 mt-1.5 sm:mt-2 font-medium px-1">
+            Thank you, <strong className="text-slate-900">{registrationResult.name}</strong>. Your official delegate pass has been generated.
           </p>
 
           {/* Pass Details Card */}
-          <div className="my-6 p-5 bg-gradient-to-br from-purple-50/60 via-white to-slate-50 border border-purple-200/70 rounded-2xl text-left space-y-3 shadow-sm">
-            <div className="flex justify-between items-center pb-3 border-b border-purple-100">
+          <div className="my-4 sm:my-6 p-4 sm:p-5 bg-white border border-slate-300 rounded-xl sm:rounded-2xl text-left space-y-3 shadow-xs">
+            <div className="flex justify-between items-center pb-2.5 sm:pb-3 border-b border-slate-200">
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Event Pass Token</p>
-                <p className="text-sm font-mono font-bold text-purple-900">{registrationResult.qr_token}</p>
+                <p className="text-xs sm:text-sm font-mono font-bold text-slate-900 truncate max-w-[180px] sm:max-w-none">{registrationResult.qr_token}</p>
               </div>
-              <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold">
+              <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[#E8F4EE] text-[#21845F] border border-[#C5E3D5] text-[10px] sm:text-xs font-bold shrink-0">
                 CONFIRMED ✓
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <span className="text-slate-500">Branch:</span>
-                <p className="text-slate-800 font-semibold">{registrationResult.branch_name}</p>
+                <span className="text-slate-500 text-[11px]">Branch:</span>
+                <p className="text-slate-800 font-semibold text-xs truncate">{registrationResult.branch_name}</p>
               </div>
               <div>
-                <span className="text-slate-500">Employee ID:</span>
-                <p className="text-slate-800 font-semibold font-mono">{employeeId.toUpperCase()}</p>
+                <span className="text-slate-500 text-[11px]">Employee ID:</span>
+                <p className="text-slate-800 font-semibold font-mono text-xs truncate">{employeeId.toUpperCase()}</p>
               </div>
             </div>
 
             {/* Scannable QR Code Box */}
-            <div className="py-3 px-2 rounded-2xl bg-[#FAF5FF] border border-purple-200/80 text-center my-2">
-              <div className="bg-white p-3 rounded-2xl inline-block shadow-sm border border-purple-100">
+            <div className="py-3 px-2 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-300 text-center my-2">
+              <div className="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl inline-block shadow-sm border border-slate-200">
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(window.location.origin + '/gbm/pass/' + registrationResult.qr_token)}`}
                   alt="Delegate QR Token"
-                  className="w-36 h-36 mx-auto"
+                  className="w-32 h-32 sm:w-36 sm:h-36 mx-auto"
                 />
               </div>
-              <p className="text-xs font-mono font-bold text-purple-950 mt-2 tracking-wider">
+              <p className="text-xs font-mono font-bold text-slate-900 mt-2 tracking-wider">
                 {registrationResult.qr_token}
               </p>
-              <p className="text-[10px] text-slate-500 mt-0.5">
+              <p className="text-[10px] text-slate-500 mt-0.5 font-medium px-1">
                 Scan or present this QR code at Gate Entry & Gift Counter
               </p>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3">
             <button
               type="button"
               disabled={downloadingPdf}
               onClick={() => handleDownloadPdf(registrationResult.qr_token, employeeId)}
-              className="w-full py-4 px-6 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-bold rounded-2xl shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-75"
+              className="w-full py-3.5 sm:py-4 px-4 sm:px-6 bg-slate-900 hover:bg-black text-white font-bold text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-75"
             >
               {downloadingPdf ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Preparing & Downloading Pass...</span>
                 </>
               ) : (
                 <>
-                  <Download size={18} />
+                  <Download size={16} className="sm:w-[18px] sm:h-[18px]" />
                   <span>Download Official Pass (PDF)</span>
                 </>
               )}
@@ -680,6 +692,7 @@ export const GmbRegistrationPage: React.FC = () => {
                 setName('');
                 setDesignation('');
                 setEmployeeId('');
+                setGender('male');
                 setMobile('');
                 setEmail('');
                 setAadhaar('');
@@ -689,7 +702,7 @@ export const GmbRegistrationPage: React.FC = () => {
                 setAttemptedSubmit(false);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="w-full py-3 px-6 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-semibold rounded-2xl text-xs flex items-center justify-center gap-2 transition-all"
+              className="w-full py-2.5 sm:py-3 px-4 sm:px-6 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-xl sm:rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-xs"
             >
               <span>← Back to Registration Form</span>
             </button>
@@ -706,42 +719,62 @@ export const GmbRegistrationPage: React.FC = () => {
   const isEmployeeIdFilled = Boolean(employeeId.trim());
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] text-slate-800 flex flex-col justify-center items-center p-4 sm:p-6 font-sans relative overflow-hidden selection:bg-purple-600 selection:text-white">
-      {/* Background Decorative Ambient Glows matching Admin Layout */}
-      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-purple-900/10 via-purple-600/5 to-transparent pointer-events-none" />
-      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[360px] bg-gradient-to-tr from-purple-500/15 to-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-[#F1F5F9] via-[#E2E8F0] to-[#EEF2F6] text-slate-800 flex flex-col justify-center items-center p-3 sm:p-6 md:p-8 font-sans relative overflow-hidden selection:bg-slate-900 selection:text-white">
+      {/* ── Multi-Tone Ambient Architectural Background Glows ────────────── */}
+      <div className="absolute top-[-10%] left-[-8%] w-[560px] h-[560px] rounded-full bg-gradient-to-br from-[#7E22CE]/15 via-slate-400/10 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-[-5%] right-[-8%] w-[500px] h-[500px] rounded-full bg-gradient-to-bl from-[#526F91]/15 via-slate-400/10 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-8%] w-[540px] h-[540px] rounded-full bg-gradient-to-tl from-[#21845F]/15 via-slate-400/10 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-5%] left-[-8%] w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-[#B97855]/10 via-slate-300/20 to-transparent blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 w-full max-w-xl my-6">
+      {/* Modern Dot Matrix Grid Texture */}
+      <div 
+        className="absolute inset-0 opacity-[0.35] pointer-events-none" 
+        style={{
+          backgroundImage: 'radial-gradient(#64748B 1.2px, transparent 1.2px)',
+          backgroundSize: '24px 24px'
+        }}
+      />
+
+      <div className="relative z-10 w-full max-w-xl my-2 sm:my-6 animate-scaleUp">
         
-        {/* Main Card Container */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl shadow-purple-950/5">
+        {/* Main Card Container with Grey Styling & Sleek Glassmorphism */}
+        <div className="bg-[#F8FAFC]/95 backdrop-blur-2xl border-2 border-slate-300 rounded-2xl sm:rounded-[32px] p-4 sm:p-7 md:p-9 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] relative overflow-hidden">
           
-          {/* Top Pill Badge matching Admin Portal */}
-          <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100/70 border border-purple-300/80 text-purple-800 text-xs font-bold uppercase tracking-wider shadow-sm">
-              <Sparkles size={14} className="text-purple-600" />
-              <span>GBM EVENT 2026 REGISTRATION PORTAL</span>
+          {/* Card Top Decorative Executive Accent Bar */}
+          <div className="absolute top-0 inset-x-0 h-1 sm:h-1.5 bg-gradient-to-r from-slate-800 via-indigo-600 to-slate-800" />
+          
+          {/* Highlighted Hero Header Section */}
+          <div className="text-center mb-6 sm:mb-8 pt-1 sm:pt-2 relative">
+            <div className="relative py-3.5 px-3 sm:py-5 sm:px-6 rounded-2xl sm:rounded-3xl bg-slate-100/90 border-2 border-slate-300 shadow-xs space-y-1.5 sm:space-y-2">
+              
+              {/* Highlighted Colorful Gradient Badge */}
+              <div className="flex justify-center mb-1">
+                <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-[#7E22CE] via-[#6366F1] to-[#2563EB] text-white text-[10px] sm:text-xs font-bold uppercase tracking-normal sm:tracking-wider shadow-md shadow-indigo-500/20">
+                  <Sparkles size={13} className="text-amber-300 shrink-0" />
+                  <span className="truncate">GBM EVENT 2026 REGISTRATION PORTAL</span>
+                </div>
+              </div>
+
+              {/* Title with Clean Weight in Solid Black */}
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-slate-900 leading-tight">
+                GBM Event Registration
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-[11px] sm:text-xs md:text-sm text-slate-600 font-medium max-w-md mx-auto leading-relaxed">
+                Please complete the step-by-step verification below to receive your official delegate pass
+              </p>
             </div>
-          </div>
-          
-          <div className="text-center mb-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-              GBM Event Registration
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Please complete the step-by-step verification below to receive your official delegate pass
-            </p>
           </div>
 
           {/* Validation Errors Summary Alert Banner */}
           {attemptedSubmit && errorCount > 0 && (
-            <div ref={errorSummaryRef} className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 animate-fadeIn text-xs">
-              <div className="flex items-center gap-2 font-bold text-sm mb-1.5 text-rose-800">
-                <AlertCircle size={16} className="text-rose-600 shrink-0" />
+            <div ref={errorSummaryRef} className="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 animate-fadeIn text-xs">
+              <div className="flex items-center gap-2 font-bold text-xs sm:text-sm mb-1.5 text-rose-800">
+                <AlertCircle size={15} className="text-rose-600 shrink-0" />
                 <span>Please complete {errorCount} required {errorCount === 1 ? 'field' : 'fields'}:</span>
               </div>
-              <ul className="list-disc list-inside space-y-1 text-rose-700 font-medium pl-1">
+              <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 text-rose-700 font-medium pl-1 text-[11px] sm:text-xs">
                 {errors.employeeId && <li>{errors.employeeId}</li>}
                 {errors.name && <li>{errors.name}</li>}
                 {errors.designation && <li>{errors.designation}</li>}
@@ -755,46 +788,41 @@ export const GmbRegistrationPage: React.FC = () => {
 
           {/* Backend API Error Banner */}
           {apiError && (
-            <div className="mb-6 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2">
-              <AlertCircle size={16} className="shrink-0 mt-0.5 text-rose-600" />
-              <div className="font-medium">{apiError}</div>
+            <div className="mb-4 sm:mb-6 p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2">
+              <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-600" />
+              <div className="font-medium text-xs">{apiError}</div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4 sm:space-y-6">
             
             {/* ── Step 1: Showroom Branch Selection ── */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-3">
-              <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
-                    1
-                  </span>
-                  <span>Select Showroom Branch</span>
-                </div>
-                <span className="text-[11px] text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                  Step 1 of 4
+            <div className="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-300 shadow-xs space-y-2.5 sm:space-y-3">
+              <label className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 text-slate-800 font-bold text-[11px] sm:text-xs flex items-center justify-center border border-slate-300 shrink-0">
+                  1
                 </span>
+                <span>Select Showroom Branch</span>
               </label>
 
               {/* Branch Dropdown Select */}
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
-                  <Building size={18} />
+                <div className="absolute inset-y-0 left-0 pl-3 sm:pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <Building size={16} className="sm:w-[18px] sm:h-[18px]" />
                 </div>
                 <select
                   value={selectedBranch}
                   onChange={(e) => setSelectedBranch(e.target.value)}
-                  className="w-full pl-11 pr-10 py-3 bg-white border border-slate-300 rounded-2xl text-slate-900 font-bold text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer appearance-none shadow-sm"
+                  className="w-full pl-9 sm:pl-11 pr-8 sm:pr-10 py-2.5 sm:py-3 bg-white border border-slate-300 rounded-xl sm:rounded-2xl text-slate-900 font-medium text-xs sm:text-sm focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-200 transition-all cursor-pointer appearance-none shadow-sm"
                 >
                   {DEFAULT_BRANCHES.map((b) => (
-                    <option key={b.code} value={b.id} className="py-1">
+                    <option key={b.code} value={b.id} className="py-1 text-slate-900">
                       {b.code} - {b.name}
                     </option>
                   ))}
                 </select>
-                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
-                  <ChevronDown size={18} />
+                <div className="absolute inset-y-0 right-0 pr-3 sm:pr-3.5 flex items-center pointer-events-none text-slate-400">
+                  <ChevronDown size={16} className="sm:w-[18px] sm:h-[18px]" />
                 </div>
               </div>
 
@@ -803,11 +831,11 @@ export const GmbRegistrationPage: React.FC = () => {
                 const sel = DEFAULT_BRANCHES.find(b => b.id === selectedBranch) || DEFAULT_BRANCHES[0];
                 if (!sel) return null;
                 return (
-                  <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-between text-xs animate-fadeIn shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-300 flex items-center justify-between text-[11px] sm:text-xs animate-fadeIn shadow-xs flex-wrap gap-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#21845F] animate-pulse shrink-0" />
                       <span className="text-slate-600 font-medium">Selected Branch:</span>
-                      <strong className="text-purple-950 font-bold">{sel.code} - {sel.name}</strong>
+                      <strong className="text-slate-900 font-bold">{sel.code} - {sel.name}</strong>
                     </div>
                   </div>
                 );
@@ -815,28 +843,23 @@ export const GmbRegistrationPage: React.FC = () => {
             </div>
 
             {/* ── Step 2: Employee Credentials & Personal Details ───────────── */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-4">
-              <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
-                    2
-                  </span>
-                  <span>Delegate Credentials & Employee Info</span>
-                </div>
-                <span className="text-[11px] text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                  Step 2 of 4
+            <div className="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-300 shadow-xs space-y-3 sm:space-y-4">
+              <label className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 text-slate-800 font-bold text-[11px] sm:text-xs flex items-center justify-center border border-slate-300 shrink-0">
+                  2
                 </span>
+                <span>Delegate Credentials & Employee Info</span>
               </label>
 
               {/* Field 1 (Compulsory First): Employee ID */}
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-50/80 via-indigo-50/40 to-white border-2 border-purple-200/90 shadow-sm">
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-bold text-purple-950 flex items-center gap-1.5">
-                    <CreditCard size={15} className="text-purple-700" />
+              <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50 border-2 border-slate-300 shadow-xs">
+                <div className="flex justify-between items-center flex-wrap gap-1 mb-1.5">
+                  <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <CreditCard size={14} className="text-slate-700 sm:w-[15px] sm:h-[15px]" />
                     <span>Employee ID</span>
                     <span className="text-rose-500 font-bold">*</span>
                   </label>
-                  <span className="text-[10px] font-bold text-purple-700 bg-purple-100/90 border border-purple-300/80 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 bg-slate-200/80 border border-slate-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
                     Compulsory First
                   </span>
                 </div>
@@ -851,19 +874,19 @@ export const GmbRegistrationPage: React.FC = () => {
                       if (errors.employeeId) setErrors(prev => ({ ...prev, employeeId: undefined }));
                     }}
                     placeholder="e.g. EMP1025"
-                    className={`w-full px-4 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm font-mono font-bold tracking-wider focus:outline-none transition-all shadow-sm ${
+                    className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3 bg-white border rounded-xl sm:rounded-2xl text-slate-900 placeholder-slate-400 text-xs sm:text-sm font-mono font-bold tracking-wider focus:outline-none transition-all shadow-sm ${
                       errors.employeeId 
                         ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
-                        : 'border-purple-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200'
+                        : 'border-slate-300 focus:border-slate-800 focus:ring-2 focus:ring-slate-200'
                     }`}
                   />
                 </div>
                 {errors.employeeId ? (
-                  <p className="text-xs text-rose-600 mt-1.5 flex items-center gap-1 font-medium">
+                  <p className="text-[11px] sm:text-xs text-rose-600 mt-1.5 flex items-center gap-1 font-medium">
                     <AlertTriangle size={12} /> {errors.employeeId}
                   </p>
                 ) : (
-                  <p className="text-[10px] text-slate-500 mt-1.5">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1.5 font-medium leading-normal">
                     Required to authorize your pass and unlock phone number verification below.
                   </p>
                 )}
@@ -871,12 +894,12 @@ export const GmbRegistrationPage: React.FC = () => {
 
               {/* Field 2: Full Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-900 mb-1 sm:mb-1.5">
                   Full Name <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
-                    <User size={18} />
+                  <div className="absolute inset-y-0 left-0 pl-3 sm:pl-3.5 flex items-center pointer-events-none text-slate-500">
+                    <User size={16} className="sm:w-[18px] sm:h-[18px]" />
                   </div>
                   <input
                     ref={nameRef}
@@ -887,15 +910,15 @@ export const GmbRegistrationPage: React.FC = () => {
                       if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
                     }}
                     placeholder="e.g. Rajesh Kumar"
-                    className={`w-full pl-11 pr-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none transition-all shadow-sm font-semibold ${
+                    className={`w-full pl-9 sm:pl-11 pr-3.5 py-2.5 sm:py-3 bg-white border rounded-xl sm:rounded-2xl text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none transition-all shadow-sm font-medium ${
                       errors.name 
                         ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
-                        : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
+                        : 'border-slate-300 focus:border-slate-800 focus:ring-2 focus:ring-slate-200'
                     }`}
                   />
                 </div>
                 {errors.name && (
-                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                  <p className="text-[11px] sm:text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertTriangle size={12} /> {errors.name}
                   </p>
                 )}
@@ -903,12 +926,12 @@ export const GmbRegistrationPage: React.FC = () => {
 
               {/* Field 3: Designation */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-900 mb-1 sm:mb-1.5">
                   Designation / Role <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
-                    <Briefcase size={18} />
+                  <div className="absolute inset-y-0 left-0 pl-3 sm:pl-3.5 flex items-center pointer-events-none text-slate-500">
+                    <Briefcase size={16} className="sm:w-[18px] sm:h-[18px]" />
                   </div>
                   <input
                     ref={desigRef}
@@ -919,15 +942,15 @@ export const GmbRegistrationPage: React.FC = () => {
                       if (errors.designation) setErrors(prev => ({ ...prev, designation: undefined }));
                     }}
                     placeholder="e.g. Showroom Manager, Sales Executive"
-                    className={`w-full pl-11 pr-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none transition-all shadow-sm ${
+                    className={`w-full pl-9 sm:pl-11 pr-3.5 py-2.5 sm:py-3 bg-white border rounded-xl sm:rounded-2xl text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none transition-all shadow-sm font-medium ${
                       errors.designation 
                         ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
-                        : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
+                        : 'border-slate-300 focus:border-slate-800 focus:ring-2 focus:ring-slate-200'
                     }`}
                   />
                 </div>
                 {errors.designation && (
-                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                  <p className="text-[11px] sm:text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertTriangle size={12} /> {errors.designation}
                   </p>
                 )}
@@ -935,70 +958,74 @@ export const GmbRegistrationPage: React.FC = () => {
 
               {/* Field 4: Gender Selection */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Gender (Delegate Gift Category) <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-slate-900 mb-1 sm:mb-1.5">
+                  Gender <span className="text-rose-500">*</span>
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setGender('male')}
-                    className={`py-3.5 px-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center ${
+                    className={`py-2.5 sm:py-3 px-1 sm:px-3 rounded-xl sm:rounded-2xl border-2 text-center transition-all flex items-center justify-center gap-1 sm:gap-1.5 font-bold text-[11px] sm:text-sm ${
                       gender === 'male'
-                        ? 'bg-[#1E293B] border-[#1E293B] text-white shadow-md'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                        ? 'bg-[#526F91] border-[#526F91] text-white shadow-md shadow-[#526F91]/25 ring-2 ring-[#C6D4E3]'
+                        : 'bg-[#EDF2F8] border-[#C6D4E3] text-[#526F91] hover:border-[#526F91] hover:bg-[#E2EAF2]'
                     }`}
                   >
-                    <span className="text-xs font-bold">Male</span>
-                    <span className={`text-[10px] mt-0.5 font-medium ${gender === 'male' ? 'text-amber-300' : 'text-slate-500'}`}>
-                      Executive Watch Set
-                    </span>
+                    <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${gender === 'male' ? 'bg-white' : 'bg-[#526F91]'}`} />
+                    <span className="truncate">Male</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setGender('female')}
-                    className={`py-3.5 px-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center ${
+                    className={`py-2.5 sm:py-3 px-1 sm:px-3 rounded-xl sm:rounded-2xl border-2 text-center transition-all flex items-center justify-center gap-1 sm:gap-1.5 font-bold text-[11px] sm:text-sm ${
                       gender === 'female'
-                        ? 'bg-[#831843] border-[#831843] text-white shadow-md'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                        ? 'bg-[#7E22CE] border-[#7E22CE] text-white shadow-md shadow-[#7E22CE]/25 ring-2 ring-[#D8B4FE]'
+                        : 'bg-[#F3E8FF] border-[#D8B4FE] text-[#7E22CE] hover:border-[#7E22CE] hover:bg-[#EDE0FB]'
                     }`}
                   >
-                    <span className="text-xs font-bold">Female</span>
-                    <span className={`text-[10px] mt-0.5 font-medium ${gender === 'female' ? 'text-pink-200' : 'text-slate-500'}`}>
-                      Pure Silk Saree Box
-                    </span>
+                    <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${gender === 'female' ? 'bg-white' : 'bg-[#7E22CE]'}`} />
+                    <span className="truncate">Female</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setGender('other')}
+                    className={`py-2.5 sm:py-3 px-1 sm:px-3 rounded-xl sm:rounded-2xl border-2 text-center transition-all flex items-center justify-center gap-1 sm:gap-1.5 font-bold text-[11px] sm:text-sm ${
+                      gender === 'other'
+                        ? 'bg-[#21845F] border-[#21845F] text-white shadow-md shadow-[#21845F]/25 ring-2 ring-[#C5E3D5]'
+                        : 'bg-[#E8F4EE] border-[#C5E3D5] text-[#21845F] hover:border-[#21845F] hover:bg-[#DDF0E7]'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${gender === 'other' ? 'bg-white' : 'bg-[#21845F]'}`} />
+                    <span className="truncate">Other</span>
                   </button>
                 </div>
               </div>
             </div>
 
             {/* ── Step 3: Identity & Contact Verification (SMS OTP) ───────── */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-4">
-              <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
-                    3
-                  </span>
-                  <span>Contact & SMS OTP Security Verification</span>
-                </div>
-                <span className="text-[11px] text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                  Step 3 of 4
+            <div className="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-300 shadow-xs space-y-3 sm:space-y-4">
+              <label className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 text-slate-800 font-bold text-[11px] sm:text-xs flex items-center justify-center border border-slate-300 shrink-0">
+                  3
                 </span>
+                <span>Contact & SMS OTP Security Verification</span>
               </label>
 
               {/* Mobile Number & SMS OTP Verification */}
-              <div className="space-y-2.5">
-                <div className="flex justify-between items-center">
-                  <label className="block text-xs font-bold text-slate-700">
+              <div className="space-y-2 sm:space-y-2.5">
+                <div className="flex justify-between items-center flex-wrap gap-1">
+                  <label className="block text-xs font-bold text-slate-900">
                     Mobile Number (10 Digits) <span className="text-rose-500">*</span>
                   </label>
                   {otpStatus === 'verified' ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                       <CheckCircle size={12} className="text-emerald-600" />
                       <span>Verified ✓</span>
                     </span>
                   ) : (
-                    <span className="text-[10px] text-purple-700 font-semibold">
+                    <span className="text-[10px] text-slate-600 font-semibold">
                       SMS OTP Required
                     </span>
                   )}
@@ -1006,7 +1033,7 @@ export const GmbRegistrationPage: React.FC = () => {
 
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-purple-700 text-xs font-bold">
+                    <span className="absolute inset-y-0 left-0 pl-3 sm:pl-3.5 flex items-center text-slate-700 text-xs font-bold">
                       +91
                     </span>
                     <input
@@ -1029,12 +1056,12 @@ export const GmbRegistrationPage: React.FC = () => {
                         if (errors.mobile) setErrors(prev => ({ ...prev, mobile: undefined }));
                       }}
                       placeholder="9876543210"
-                      className={`w-full pl-12 pr-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm font-mono focus:outline-none transition-all shadow-sm ${
+                      className={`w-full pl-10 sm:pl-12 pr-3.5 py-2.5 sm:py-3 bg-white border rounded-xl sm:rounded-2xl text-slate-900 placeholder-slate-400 text-xs sm:text-sm font-mono focus:outline-none transition-all shadow-sm font-medium ${
                         otpStatus === 'verified'
                           ? 'border-emerald-400 bg-emerald-50/40 text-emerald-950 font-bold'
                           : errors.mobile 
                             ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
-                            : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
+                            : 'border-slate-300 focus:border-slate-800 focus:ring-2 focus:ring-slate-200'
                       }`}
                     />
                   </div>
@@ -1044,7 +1071,7 @@ export const GmbRegistrationPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleResetOtp}
-                      className="px-4 py-2.5 rounded-2xl border border-slate-300 hover:border-slate-400 bg-white text-slate-700 hover:text-slate-900 text-xs font-bold transition-all shrink-0 shadow-sm"
+                      className="w-full sm:w-auto px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border border-slate-300 hover:border-slate-400 bg-white text-slate-700 hover:text-slate-900 text-xs font-bold transition-all shrink-0 shadow-sm"
                     >
                       Change Number
                     </button>
@@ -1053,15 +1080,15 @@ export const GmbRegistrationPage: React.FC = () => {
                       type="button"
                       disabled={mobile.replace(/\D/g, '').length !== 10 || otpStatus === 'sending'}
                       onClick={() => handleSendOtp(false)}
-                      className={`px-4 py-3 rounded-2xl text-xs font-bold transition-all shrink-0 shadow-sm flex items-center justify-center gap-1.5 ${
+                      className={`w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all shrink-0 shadow-sm flex items-center justify-center gap-1.5 ${
                         mobile.replace(/\D/g, '').length === 10 && otpStatus !== 'sending'
-                          ? 'bg-purple-700 hover:bg-purple-800 text-white shadow-purple-600/20 active:scale-[0.98]'
+                          ? 'bg-slate-900 hover:bg-black text-white shadow-slate-900/20 active:scale-[0.98]'
                           : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
                       }`}
                     >
                       {otpStatus === 'sending' ? (
                         <>
-                          <div className="w-3.5 h-3.5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                          <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
                           <span>Sending SMS...</span>
                         </>
                       ) : otpStatus === 'sent' ? (
@@ -1081,34 +1108,34 @@ export const GmbRegistrationPage: React.FC = () => {
 
                 {/* Error / Verified / Helper message for Mobile Input */}
                 {errors.mobile ? (
-                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                  <p className="text-[11px] sm:text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertTriangle size={12} /> {errors.mobile}
                   </p>
                 ) : otpStatus === 'verified' ? (
-                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                      <span>Mobile number verified: <strong>+91 {mobile}</strong></span>
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-sm flex-wrap gap-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+                      <span className="text-[11px] sm:text-xs">Mobile verified: <strong>+91 {mobile}</strong></span>
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
                       SMS Verified ✓
                     </span>
                   </div>
                 ) : (
-                  <p className="text-[10px] text-slate-500 mt-0.5">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1 font-medium">
                     Your QR pass & event updates will be sent to this verified mobile number.
                   </p>
                 )}
 
                 {/* Inline OTP Verification Panel */}
                 {(otpStatus === 'sent' || otpStatus === 'verifying') && (
-                  <div className="p-4 sm:p-5 rounded-2xl bg-purple-50/80 border-2 border-purple-200 space-y-3 animate-fadeIn shadow-md">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-purple-950 font-bold text-xs sm:text-sm">
-                        <KeyRound size={16} className="text-purple-700" />
+                  <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 border-2 border-slate-300 space-y-2.5 sm:space-y-3 animate-fadeIn shadow-sm">
+                    <div className="flex items-center justify-between flex-wrap gap-1">
+                      <div className="flex items-center gap-1.5 text-slate-900 font-bold text-xs sm:text-sm">
+                        <KeyRound size={15} className="text-slate-700" />
                         <span>Enter 6-Digit SMS OTP</span>
                       </div>
-                      <span className="text-[11px] text-slate-500">
+                      <span className="text-[10px] sm:text-[11px] text-slate-500">
                         Sent to <strong>+91 {mobile}</strong>
                       </span>
                     </div>
@@ -1126,15 +1153,15 @@ export const GmbRegistrationPage: React.FC = () => {
                           if (otpError) setOtpError(null);
                         }}
                         placeholder="••••••"
-                        className="w-full sm:flex-1 py-2.5 px-4 bg-white border border-purple-300 rounded-xl text-center text-lg font-mono font-bold tracking-[0.35em] text-purple-950 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all shadow-inner"
+                        className="w-full sm:flex-1 py-2 sm:py-2.5 px-3 sm:px-4 bg-white border border-slate-300 rounded-xl text-center text-base sm:text-lg font-mono font-bold tracking-[0.25em] sm:tracking-[0.35em] text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all shadow-inner"
                       />
                       <button
                         type="button"
                         disabled={otpCode.length < 4 || otpStatus === 'verifying'}
                         onClick={handleVerifyOtp}
-                        className={`py-2.5 px-6 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 ${
+                        className={`w-full sm:w-auto py-2.5 px-5 sm:px-6 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 ${
                           otpCode.length >= 4 && otpStatus !== 'verifying'
-                            ? 'bg-gradient-to-r from-[#6D28D9] to-[#7C3AED] hover:from-[#581C87] hover:to-[#6D28D9] text-white shadow-purple-600/30 active:scale-[0.98]'
+                            ? 'bg-slate-900 hover:bg-black text-white active:scale-[0.98]'
                             : 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed'
                         }`}
                       >
@@ -1146,26 +1173,26 @@ export const GmbRegistrationPage: React.FC = () => {
                         ) : (
                           <>
                             <span>Confirm & Verify</span>
-                            <Check size={16} />
+                            <Check size={15} />
                           </>
                         )}
                       </button>
                     </div>
 
                     {/* Resend Timer & Actions */}
-                    <div className="flex items-center justify-between text-xs pt-1">
+                    <div className="flex items-center justify-between text-[11px] sm:text-xs flex-wrap gap-1.5 pt-1">
                       {otpCountdown > 0 ? (
                         <span className="text-slate-500 flex items-center gap-1 font-medium">
-                          <Clock size={13} className="text-purple-600" />
+                          <Clock size={12} className="text-slate-600" />
                           <span>Resend OTP in <strong>{otpCountdown}s</strong></span>
                         </span>
                       ) : (
                         <button
                           type="button"
                           onClick={() => handleSendOtp(true)}
-                          className="text-purple-700 hover:text-purple-900 font-bold underline flex items-center gap-1 cursor-pointer transition-colors"
+                          className="text-slate-900 hover:text-black font-bold underline flex items-center gap-1 cursor-pointer transition-colors text-[11px] sm:text-xs"
                         >
-                          <RefreshCw size={12} />
+                          <RefreshCw size={11} />
                           <span>Resend SMS OTP</span>
                         </button>
                       )}
@@ -1173,7 +1200,7 @@ export const GmbRegistrationPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={handleResetOtp}
-                        className="text-slate-500 hover:text-slate-800 text-[11px] underline"
+                        className="text-slate-500 hover:text-slate-800 text-[10px] sm:text-[11px] underline"
                       >
                         Change number
                       </button>
@@ -1182,15 +1209,15 @@ export const GmbRegistrationPage: React.FC = () => {
                     {/* Inline OTP Error Display */}
                     {otpError && (
                       <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-1.5 font-medium animate-fadeIn">
-                        <AlertTriangle size={14} className="shrink-0" />
+                        <AlertTriangle size={13} className="shrink-0" />
                         <span>{otpError}</span>
                       </div>
                     )}
 
                     {/* Inline OTP Success Display */}
                     {otpSuccessMsg && !otpError && (
-                      <p className="text-[11px] text-purple-700 flex items-center gap-1 font-medium">
-                        <Sparkles size={12} className="text-purple-600 shrink-0" />
+                      <p className="text-[10px] sm:text-[11px] text-slate-700 flex items-center gap-1 font-medium">
+                        <Sparkles size={11} className="text-slate-600 shrink-0" />
                         <span>{otpSuccessMsg}</span>
                       </p>
                     )}
@@ -1200,8 +1227,8 @@ export const GmbRegistrationPage: React.FC = () => {
 
               {/* Aadhaar Number */}
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-bold text-slate-700">
+                <div className="flex justify-between items-center mb-1 sm:mb-1.5">
+                  <label className="text-xs font-bold text-slate-900">
                     Aadhaar Number (12 Digits) <span className="text-rose-500">*</span>
                   </label>
                   <span className="text-[10px] text-slate-500 font-mono">
@@ -1219,31 +1246,31 @@ export const GmbRegistrationPage: React.FC = () => {
                     if (errors.aadhaar) setErrors(prev => ({ ...prev, aadhaar: undefined }));
                   }}
                   placeholder="1234 5678 9012"
-                  className={`w-full px-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm font-mono tracking-wider focus:outline-none transition-all shadow-sm ${
+                  className={`w-full px-3.5 py-2.5 sm:py-3 bg-white border rounded-xl sm:rounded-2xl text-slate-900 placeholder-slate-400 text-xs sm:text-sm font-mono tracking-wider focus:outline-none transition-all shadow-sm font-medium ${
                     errors.aadhaar 
                       ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
-                      : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
+                      : 'border-slate-300 focus:border-slate-800 focus:ring-2 focus:ring-slate-200'
                   }`}
                 />
                 {errors.aadhaar ? (
-                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                  <p className="text-[11px] sm:text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertTriangle size={12} /> {errors.aadhaar}
                   </p>
                 ) : (
-                  <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
-                    <Shield size={11} className="text-purple-600" /> Masked & stored as XXXX XXXX 9012 for security.
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1 flex items-center gap-1 font-medium">
+                    <Shield size={11} className="text-slate-600 shrink-0" /> Masked & stored as XXXX XXXX 9012 for security.
                   </p>
                 )}
               </div>
 
               {/* Email (Optional) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-900 mb-1 sm:mb-1.5">
                   Email Address <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-600">
-                    <Mail size={18} />
+                  <div className="absolute inset-y-0 left-0 pl-3 sm:pl-3.5 flex items-center pointer-events-none text-slate-500">
+                    <Mail size={16} className="sm:w-[18px] sm:h-[18px]" />
                   </div>
                   <input
                     ref={emailRef}
@@ -1254,15 +1281,15 @@ export const GmbRegistrationPage: React.FC = () => {
                       if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
                     }}
                     placeholder="rajesh.kumar@example.com"
-                    className={`w-full pl-11 pr-3.5 py-3 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none transition-all shadow-sm ${
+                    className={`w-full pl-9 sm:pl-11 pr-3.5 py-2.5 sm:py-3 bg-white border rounded-xl sm:rounded-2xl text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none transition-all shadow-sm font-medium ${
                       errors.email 
                         ? 'border-rose-400 bg-rose-50/50 focus:ring-2 focus:ring-rose-200' 
-                        : 'border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-100'
+                        : 'border-slate-300 focus:border-slate-800 focus:ring-2 focus:ring-slate-200'
                     }`}
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                  <p className="text-[11px] sm:text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertTriangle size={12} /> {errors.email}
                   </p>
                 )}
@@ -1270,50 +1297,50 @@ export const GmbRegistrationPage: React.FC = () => {
             </div>
 
             {/* ── Step 4: Photo / Security Selfie ─────────────────────────── */}
-            <div ref={photoSectionRef} className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-4">
-              <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center border border-purple-300">
+            <div ref={photoSectionRef} className="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-300 shadow-xs space-y-3 sm:space-y-4">
+              <label className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 text-slate-800 font-bold text-[11px] sm:text-xs flex items-center justify-center border border-slate-300 shrink-0">
                   4
                 </span>
-                <span>Delegate Photo / Selfie</span>
-                <span className="text-rose-500">*</span>
+                <span>Delegate Photo / Security Selfie</span>
+                <span className="text-rose-500 font-bold">*</span>
               </label>
 
               {cameraActive ? (
-                <div className="relative rounded-2xl overflow-hidden bg-black border-2 border-purple-500 aspect-square max-w-[260px] mx-auto shadow-lg">
+                <div className="relative rounded-xl sm:rounded-2xl overflow-hidden bg-black border-2 border-slate-700 aspect-square max-w-[220px] sm:max-w-[260px] mx-auto shadow-lg">
                   <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2 px-3">
+                  <div className="absolute inset-x-0 bottom-2 sm:bottom-3 flex justify-center gap-2 px-2 sm:px-3">
                     <button
                       type="button"
                       onClick={capturePhoto}
-                      className="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow"
+                      className="px-3.5 sm:px-4 py-1.5 sm:py-2 bg-slate-900 hover:bg-black text-white font-bold rounded-lg sm:rounded-xl text-xs flex items-center gap-1.5 shadow"
                     >
-                      <Camera size={14} /> Capture Selfie
+                      <Camera size={13} /> <span>Capture</span>
                     </button>
                     <button
                       type="button"
                       onClick={stopCamera}
-                      className="px-3 py-2 bg-slate-800 text-white hover:bg-slate-700 rounded-xl text-xs font-bold"
+                      className="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-800 text-white hover:bg-slate-700 rounded-lg sm:rounded-xl text-xs font-bold"
                     >
-                      <X size={14} />
+                      <X size={13} />
                     </button>
                   </div>
                 </div>
               ) : photoPreview ? (
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="relative w-28 h-32 rounded-2xl overflow-hidden border-2 border-purple-500 shadow-md bg-white">
+                <div className="flex flex-col items-center space-y-2.5 sm:space-y-3">
+                  <div className="relative w-24 h-28 sm:w-28 sm:h-32 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-slate-700 shadow-md bg-white">
                     <img
                       src={photoPreview}
                       alt="Delegate Selfie"
                       className="w-full h-full object-cover"
                     />
                     {uploadingPhoto && (
-                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center text-xs font-bold text-purple-800">
+                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center text-[11px] sm:text-xs font-bold text-slate-800">
                         Uploading...
                       </div>
                     )}
@@ -1322,53 +1349,53 @@ export const GmbRegistrationPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={startCamera}
-                      className="px-3 py-1.5 bg-white hover:bg-purple-50 border border-slate-300 text-purple-700 font-semibold rounded-xl text-xs flex items-center gap-1 transition-all shadow-sm"
+                      className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 font-semibold rounded-xl text-xs flex items-center gap-1 transition-all shadow-sm"
                     >
                       <RefreshCw size={12} /> Retake
                     </button>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold rounded-xl text-xs flex items-center gap-1 transition-all shadow-sm"
+                      className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded-xl text-xs flex items-center gap-1 transition-all shadow-sm"
                     >
                       <Upload size={12} /> Upload File
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className={`grid grid-cols-2 gap-3 p-0.5 rounded-2xl ${errors.photo ? 'border border-dashed border-rose-400 bg-rose-50/50' : ''}`}>
+                <div className={`grid grid-cols-2 gap-2 sm:gap-3 p-0.5 rounded-xl sm:rounded-2xl ${errors.photo ? 'border border-dashed border-rose-400 bg-rose-50/50' : ''}`}>
                   <button
                     type="button"
                     onClick={startCamera}
-                    className="p-5 rounded-2xl bg-white border-2 border-dashed border-slate-300 hover:border-purple-600 hover:bg-purple-50/40 transition-all flex flex-col items-center justify-center text-center gap-2 group shadow-sm"
+                    className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 border-2 border-dashed border-slate-300 hover:border-slate-600 hover:bg-slate-100 transition-all flex flex-col items-center justify-center text-center gap-1.5 sm:gap-2 group shadow-sm"
                   >
-                    <div className="w-11 h-11 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center group-hover:bg-purple-100 transition-all border border-purple-200">
-                      <Camera size={20} />
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white text-slate-800 flex items-center justify-center group-hover:bg-slate-200 transition-all border border-slate-300 shadow-xs">
+                      <Camera size={18} className="sm:w-5 sm:h-5" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-900">Take Live Selfie</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Use camera</p>
+                      <p className="text-xs font-bold text-slate-900">Take Selfie</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 font-medium">Use camera</p>
                     </div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-5 rounded-2xl bg-white border-2 border-dashed border-slate-300 hover:border-purple-600 hover:bg-purple-50/40 transition-all flex flex-col items-center justify-center text-center gap-2 group shadow-sm"
+                    className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 border-2 border-dashed border-slate-300 hover:border-slate-600 hover:bg-slate-100 transition-all flex flex-col items-center justify-center text-center gap-1.5 sm:gap-2 group shadow-sm"
                   >
-                    <div className="w-11 h-11 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center group-hover:bg-purple-100 transition-all border border-purple-200">
-                      <Upload size={20} />
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white text-slate-800 flex items-center justify-center group-hover:bg-slate-200 transition-all border border-slate-300 shadow-xs">
+                      <Upload size={18} className="sm:w-5 sm:h-5" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-900">Upload Photo</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">From gallery</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 font-medium">From gallery</p>
                     </div>
                   </button>
                 </div>
               )}
 
               {errors.photo && (
-                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                <p className="text-[11px] sm:text-xs text-rose-600 mt-1 flex items-center gap-1 font-medium">
                   <AlertTriangle size={12} /> {errors.photo}
                 </p>
               )}
@@ -1387,7 +1414,7 @@ export const GmbRegistrationPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-4 px-6 bg-gradient-to-r from-[#581C87] via-[#6D28D9] to-[#7C3AED] hover:from-[#4C1D95] hover:to-[#6D28D9] text-white font-bold text-sm sm:text-base rounded-2xl shadow-xl shadow-purple-600/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
+                className="w-full py-3.5 sm:py-4 px-4 sm:px-6 bg-slate-900 hover:bg-black text-white font-bold text-xs sm:text-base rounded-xl sm:rounded-2xl shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
               >
                 {submitting ? (
                   <span className="flex items-center gap-2">
@@ -1397,7 +1424,7 @@ export const GmbRegistrationPage: React.FC = () => {
                 ) : (
                   <>
                     <span>Generate Official Event Pass</span>
-                    <ArrowRight size={18} />
+                    <ArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />
                   </>
                 )}
               </button>

@@ -117,78 +117,78 @@ export const GmbDashboardView: React.FC<GmbDashboardViewProps> = ({ token }) => 
         </div>
       </div>
 
-      {/* ── 4 Primary Metric Cards (Matching Image 2 Style) ──────────────── */}
+      {/* ── 4 Primary Metric Cards (Harmonized 4-Color Theme) ──────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* Total Registered */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        {/* 🟣 1. Total Registered (Purple) */}
+        <div className="p-5 rounded-3xl bg-white border border-[#D8B4FE]/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow">
           <div>
             <div className="flex justify-between items-start">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Registered</span>
-              <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-700 border border-purple-100">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Registered</span>
+              <div className="p-2.5 rounded-2xl bg-[#F3E8FF] text-[#7E22CE] border border-[#D8B4FE]">
                 <Users size={18} />
               </div>
             </div>
-            <p className="text-3xl font-bold text-slate-900 mt-2 font-display">{m.total_registrations || 0}</p>
+            <p className="text-3xl font-bold text-[#3B0764] mt-2 font-display">{m.total_registrations || 0}</p>
             <p className="text-xs text-slate-500 mt-0.5">Delegate Registrations</p>
           </div>
           <div className="pt-3 mt-1 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500">OTP Verified:</span>
-            <span className="font-bold text-emerald-700">{m.otp_verified_count || 0}</span>
+            <span className="font-bold text-[#21845F]">{m.otp_verified_count || 0}</span>
           </div>
         </div>
 
-        {/* Gate Entries */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        {/* 🟢 2. Gate Entries (Green) */}
+        <div className="p-5 rounded-3xl bg-white border border-[#C5E3D5]/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow">
           <div>
             <div className="flex justify-between items-start">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Gate Checked-In</span>
-              <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Gate Checked-In</span>
+              <div className="p-2.5 rounded-2xl bg-[#E8F4EE] text-[#21845F] border border-[#C5E3D5]">
                 <CheckCircle2 size={18} />
               </div>
             </div>
-            <p className="text-3xl font-bold text-emerald-700 mt-2 font-display">{m.total_entered || 0}</p>
+            <p className="text-3xl font-bold text-[#21845F] mt-2 font-display">{m.total_entered || 0}</p>
             <p className="text-xs text-slate-500 mt-0.5">Attendees in Hall</p>
           </div>
           <div className="pt-3 mt-1 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500">Not Entered:</span>
-            <span className="font-bold text-slate-600">{m.not_entered || 0}</span>
+            <span className="font-bold text-rose-600">{m.not_entered || 0}</span>
           </div>
         </div>
 
-        {/* Gifts Claimed */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        {/* 🟠 3. Gifts Claimed (Orange) */}
+        <div className="p-5 rounded-3xl bg-white border border-[#ECCFC0]/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow">
           <div>
             <div className="flex justify-between items-start">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Gifts Distributed</span>
-              <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-700 border border-purple-100">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Gifts Distributed</span>
+              <div className="p-2.5 rounded-2xl bg-[#FAF1EC] text-[#B97855] border border-[#ECCFC0]">
                 <Gift size={18} />
               </div>
             </div>
-            <p className="text-3xl font-bold text-purple-900 mt-2 font-display">{m.gifts_claimed || 0}</p>
+            <p className="text-3xl font-bold text-[#9A3412] mt-2 font-display">{m.gifts_claimed || 0}</p>
             <p className="text-xs text-slate-500 mt-0.5">Claimed at Counter</p>
           </div>
           <div className="pt-3 mt-1 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500">Pending Gifts:</span>
-            <span className="font-bold text-amber-700">{m.gifts_pending || 0}</span>
+            <span className="font-bold text-[#B97855]">{m.gifts_pending || 0}</span>
           </div>
         </div>
 
-        {/* Passes Issued */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        {/* 🔵 4. Passes Issued (Blue) */}
+        <div className="p-5 rounded-3xl bg-white border border-[#C6D4E3]/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow">
           <div>
             <div className="flex justify-between items-start">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Passes Generated</span>
-              <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-700 border border-blue-100">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Passes Generated</span>
+              <div className="p-2.5 rounded-2xl bg-[#EDF2F8] text-[#526F91] border border-[#C6D4E3]">
                 <Ticket size={18} />
               </div>
             </div>
-            <p className="text-3xl font-bold text-slate-900 mt-2 font-display">{m.passes_generated || 0}</p>
+            <p className="text-3xl font-bold text-[#1E3A8A] mt-2 font-display">{m.passes_generated || 0}</p>
             <p className="text-xs text-slate-500 mt-0.5">Live QR Tokens</p>
           </div>
           <div className="pt-3 mt-1 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500">Dispatched:</span>
-            <span className="font-bold text-blue-700">100% Ready</span>
+            <span className="font-bold text-[#526F91]">100% Ready</span>
           </div>
         </div>
       </div>
@@ -197,9 +197,9 @@ export const GmbDashboardView: React.FC<GmbDashboardViewProps> = ({ token }) => 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
         {/* Branch Breakdown */}
-        <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-sm">
+        <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-4">
-            <Building size={16} className="text-purple-600" />
+            <Building size={16} className="text-[#7E22CE]" />
             <span>Store Branch Breakdown</span>
           </h3>
           <div className="space-y-2.5">
@@ -207,7 +207,7 @@ export const GmbDashboardView: React.FC<GmbDashboardViewProps> = ({ token }) => 
               branchEntries.map(([branch, count]: any) => (
                 <div key={branch} className="flex justify-between items-center p-3 rounded-2xl bg-[#F8FAFC] border border-slate-200/60">
                   <span className="text-xs font-semibold text-slate-800">{branch}</span>
-                  <span className="text-xs font-bold font-mono text-purple-800 bg-purple-50 px-2.5 py-1 rounded-xl border border-purple-200">
+                  <span className="text-xs font-bold font-mono text-[#7E22CE] bg-[#F3E8FF] px-2.5 py-1 rounded-xl border border-[#D8B4FE]">
                     {count} delegates
                   </span>
                 </div>
@@ -219,26 +219,26 @@ export const GmbDashboardView: React.FC<GmbDashboardViewProps> = ({ token }) => 
         </div>
 
         {/* Gender Breakdown & Gift Allocation */}
-        <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-sm">
+        <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-4">
-            <Gift size={16} className="text-purple-600" />
+            <Gift size={16} className="text-[#B97855]" />
             <span>Gender & Gift Allocation</span>
           </h3>
           <div className="space-y-3">
-            <div className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-slate-200/60 flex justify-between items-center">
+            <div className="p-3.5 rounded-2xl bg-[#EDF2F8] border border-[#C6D4E3] flex justify-between items-center">
               <div>
-                <p className="text-xs font-bold text-slate-800">Male Delegates</p>
-                <p className="text-[10px] text-slate-500">Executive Watch Set</p>
+                <p className="text-xs font-bold text-[#1E3A8A]">Male Delegates</p>
+                <p className="text-[10px] text-[#526F91]">Executive Watch Set</p>
               </div>
-              <span className="text-base font-bold font-mono text-purple-700">{m.male_count || 0}</span>
+              <span className="text-base font-bold font-mono text-[#526F91] bg-white px-2.5 py-0.5 rounded-lg border border-[#C6D4E3]">{m.male_count || 0}</span>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-slate-200/60 flex justify-between items-center">
+            <div className="p-3.5 rounded-2xl bg-[#F3E8FF] border border-[#D8B4FE] flex justify-between items-center">
               <div>
-                <p className="text-xs font-bold text-slate-800">Female Delegates</p>
-                <p className="text-[10px] text-slate-500">Pure Silk Saree Box</p>
+                <p className="text-xs font-bold text-[#3B0764]">Female Delegates</p>
+                <p className="text-[10px] text-[#7E22CE]">Pure Silk Saree Box</p>
               </div>
-              <span className="text-base font-bold font-mono text-pink-600">{m.female_count || 0}</span>
+              <span className="text-base font-bold font-mono text-[#7E22CE] bg-white px-2.5 py-0.5 rounded-lg border border-[#D8B4FE]">{m.female_count || 0}</span>
             </div>
           </div>
         </div>

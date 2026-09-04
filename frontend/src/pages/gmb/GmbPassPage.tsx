@@ -43,7 +43,7 @@ export const GmbPassPage: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editDesignation, setEditDesignation] = useState('');
   const [editEmployeeId, setEditEmployeeId] = useState('');
-  const [editGender, setEditGender] = useState<'male' | 'female'>('male');
+  const [editGender, setEditGender] = useState<'male' | 'female' | 'other'>('male');
   const [editRemark, setEditRemark] = useState('');
   const [showDetailFields, setShowDetailFields] = useState(false);
 
@@ -668,25 +668,40 @@ export const GmbPassPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 mb-1">Gender / Gift</label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <label className="block text-[10px] font-semibold text-slate-600 mb-1">Gender</label>
+                        <div className="grid grid-cols-3 gap-2">
                           <button
                             type="button"
                             onClick={() => setEditGender('male')}
-                            className={`py-2 px-2 rounded-xl border text-center font-bold ${
-                              editGender === 'male' ? 'bg-purple-100 border-purple-500 text-purple-900' : 'bg-slate-50 text-slate-600'
+                            className={`py-2 px-2 rounded-xl border text-center font-bold text-xs transition-all ${
+                              editGender === 'male'
+                                ? 'bg-[#526F91] border-[#526F91] text-white shadow-sm'
+                                : 'bg-[#EDF2F8] border-[#C6D4E3] text-[#526F91] hover:border-[#526F91]'
                             }`}
                           >
-                            Male (Watch Set)
+                            Male
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditGender('female')}
-                            className={`py-2 px-2 rounded-xl border text-center font-bold ${
-                              editGender === 'female' ? 'bg-purple-100 border-purple-500 text-purple-900' : 'bg-slate-50 text-slate-600'
+                            className={`py-2 px-2 rounded-xl border text-center font-bold text-xs transition-all ${
+                              editGender === 'female'
+                                ? 'bg-[#7E22CE] border-[#7E22CE] text-white shadow-sm'
+                                : 'bg-[#F3E8FF] border-[#D8B4FE] text-[#7E22CE] hover:border-[#7E22CE]'
                             }`}
                           >
-                            Female (Silk Saree)
+                            Female
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditGender('other')}
+                            className={`py-2 px-2 rounded-xl border text-center font-bold text-xs transition-all ${
+                              editGender === 'other'
+                                ? 'bg-[#21845F] border-[#21845F] text-white shadow-sm'
+                                : 'bg-[#E8F4EE] border-[#C5E3D5] text-[#21845F] hover:border-[#21845F]'
+                            }`}
+                          >
+                            Other
                           </button>
                         </div>
                       </div>
