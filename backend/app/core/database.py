@@ -11,6 +11,106 @@ load_dotenv()
 # Database file location in backend directory
 DB_PATH = Path(__file__).resolve().parents[2] / "sirisamruddhi_crm.db"
 
+class PgRow(dict):
+    """Row adapter for PostgreSQL RealDictCursor allowing dictionary and index-based access matching sqlite3.Row"""
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return list(self.values())[key]
+        return super().__getitem__(key)
+
+    def __contains__(self, key):
+        return super().__contains__(key)
+
+class PgCursorWrapper:
+    """Cursor wrapper that translates SQLite '?' parameter syntax and statements to PostgreSQL '%s' syntax"""
+    def __init__(self, pg_cursor):
+        self._cur = pg_cursor
+
+    def _convert_query(self, query: str) -> str:
+        q = query
+        # Handle SQLite specific upsert syntax if encountered
+        if "INSERT OR REPLACE INTO settings" in q:
+            q = q.replace("INSERT OR REPLACE INTO settings", "INSERT INTO settings")
+            if "ON CONFLICT" not in q:
+                q += " ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data"
+        elif "INSERT OR IGNORE INTO" in q:
+            q = q.replace("INSERT OR IGNORE INTO", "INSERT INTO")
+            if "ON CONFLICT" not in q:
+                q += " ON CONFLICT DO NOTHING"
+
+        # Safely convert '?' to '%s' outside quotes
+        parts = []
+        in_quote = False
+        quote_char = None
+        for char in q:
+            if char in ("'", '"'):
+                if not in_quote:
+                    in_quote = True
+                    quote_char = char
+                elif quote_char == char:
+                    in_quote = False
+                    quote_char = None
+                parts.append(char)
+            elif char == '?' and not in_quote:
+                parts.append('%s')
+            else:
+                parts.append(char)
+        return "".join(parts)
+
+    def execute(self, query, params=None):
+        converted = self._convert_query(query)
+        if params is not None:
+            if isinstance(params, (list, tuple)):
+                return self._cur.execute(converted, tuple(params))
+            return self._cur.execute(converted, params)
+        return self._cur.execute(converted)
+
+    def executemany(self, query, params_list):
+        converted = self._convert_query(query)
+        return self._cur.executemany(converted, params_list)
+
+    def fetchone(self):
+        row = self._cur.fetchone()
+        return PgRow(row) if row else None
+
+    def fetchall(self):
+        rows = self._cur.fetchall()
+        return [PgRow(r) for r in rows] if rows else []
+
+    @property
+    def rowcount(self):
+        return self._cur.rowcount
+
+    @property
+    def lastrowid(self):
+        return getattr(self._cur, 'lastrowid', None)
+
+    def close(self):
+        return self._cur.close()
+
+class PgConnectionWrapper:
+    """Connection wrapper ensuring full parity with sqlite3 Connection"""
+    def __init__(self, pg_conn):
+        self._conn = pg_conn
+
+    def cursor(self):
+        return PgCursorWrapper(self._conn.cursor())
+
+    def commit(self):
+        return self._conn.commit()
+
+    def rollback(self):
+        return self._conn.rollback()
+
+    def close(self):
+        return self._conn.close()
+
+    def execute(self, query, params=None):
+        cur = self.cursor()
+        cur.execute(query, params)
+        return cur
+
+
 def get_postgres_connection():
     """Attempts to connect to PostgreSQL using DATABASE_URL or individual POSTGRES_* params"""
     try:
@@ -67,11 +167,17 @@ def auto_migrate_databases():
 def get_db_connection():
     """
     Returns an active database connection.
-    Uses SQLite with WAL mode and autocommit (isolation_level=None) for non-blocking concurrency.
+    If DB_ENGINE=postgresql, connects to PostgreSQL with automatic SQLite fallback on failure.
     """
+    db_engine = os.getenv("DB_ENGINE", "").lower().strip()
+    if db_engine in ("postgresql", "postgres"):
+        pg_conn = get_postgres_connection()
+        if pg_conn:
+            return PgConnectionWrapper(pg_conn)
+
+    # SQLite connection with WAL mode and non-blocking concurrency
     conn = sqlite3.connect(str(DB_PATH), timeout=60.0, check_same_thread=False, isolation_level=None)
     conn.row_factory = sqlite3.Row
-    # Enable WAL mode and busy timeout for high concurrency
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("PRAGMA foreign_keys=ON")
